@@ -5,34 +5,6 @@ import { motion } from 'framer-motion';
 const Home = () => {
   const { user } = useAuth();
 
-  // Palette de couleurs harmonisées
-  const colors = {
-    primary: {
-      darkGreen: 'text-emerald-800',
-      mediumGreen: 'text-emerald-600',
-      lightGreen: 'text-emerald-400',
-    },
-    secondary: {
-      darkBrown: 'text-amber-900',
-      mediumBrown: 'text-amber-700',
-      lightBrown: 'text-amber-500',
-    },
-    neutral: {
-      dark: 'text-gray-900',
-      medium: 'text-gray-700',
-      light: 'text-gray-500',
-    },
-    background: {
-      light: 'bg-white',
-      lightGreen: 'bg-emerald-50',
-      lightBrown: 'bg-amber-50',
-    },
-    border: {
-      green: 'border-emerald-200',
-      brown: 'border-amber-200',
-      gray: 'border-gray-200',
-    }
-  };
 
   // Données de la page
   const activities = [

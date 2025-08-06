@@ -16,8 +16,6 @@ const MemberCard = ({ member, onDelete, userRole, onEdit }) => {
 
   // Définition des couleurs pour la cohérence visuelle
   const primaryGreen = 'text-emerald-700';
-  const lightGreenBg = 'bg-emerald-500';
-  const lightGreenHover = 'hover:bg-emerald-600';
   const neutralDark = 'text-gray-800';
   const neutralBorder = 'border-gray-200';
   const redBg = 'bg-red-500';
