@@ -1,0 +1,340 @@
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { getImages, createImage, deleteImage } from '../services/galleryService';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiX, FiUpload, FiImage } from 'react-icons/fi';
+
+// Couleurs harmonisées
+const colors = {
+  primary: {
+    green: '#2b8a3e',
+    lightGreen: '#40c057',
+    darkGreen: '#1e6a2e',
+    brown: '#5c3c21',
+    lightBrown: '#8a5a44'
+  },
+  secondary: {
+    beige: '#f8f9fa',
+    lightBeige: '#e9ecef',
+    darkBeige: '#dee2e6'
+  }
+};
+
+// Animations
+const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.3 } }
+};
+
+const slideUp = {
+  hidden: { y: 20, opacity: 0 },
+  visible: { y: 0, opacity: 1, transition: { duration: 0.3 } }
+};
+
+const Gallery = () => {
+  const { user } = useAuth();
+  const [images, setImages] = useState([]);
+  const [formData, setFormData] = useState({ 
+    title: '', 
+    category: '', 
+    image: null,
+    fileName: ''
+  });
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [fileError, setFileError] = useState('');
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      setLoading(true);
+      try {
+        const data = await getImages();
+        setImages(data);
+      } catch (error) {
+        console.error('Erreur lors du chargement des images:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchImages();
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setFileError('');
+    
+    if (!formData.image) {
+      setFileError('Veuillez sélectionner une image');
+      return;
+    }
+
+    try {
+      const data = new FormData();
+      data.append('title', formData.title.trim());
+      data.append('category', formData.category.trim());
+      data.append('image', formData.image);
+
+      const newImage = await createImage(data);
+      setImages([newImage, ...images]);
+      setFormData({ title: '', category: '', image: null, fileName: '' });
+      e.target.reset();
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout de l\'image:', error);
+      alert(`Échec de l'ajout de l'image: ${error.message || 'Erreur inconnue'}`);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        setFileError('Le fichier ne doit pas dépasser 5MB');
+        return;
+      }
+      setFormData({
+        ...formData,
+        image: file,
+        fileName: file.name
+      });
+      setFileError('');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette image ?')) {
+      try {
+        await deleteImage(id);
+        setImages(images.filter((img) => img.id !== id));
+      } catch (error) {
+        console.error('Erreur lors de la suppression de l\'image:', error);
+      }
+    }
+  };
+
+  const handleImageClick = (image) => {
+    setSelectedImage(image);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setTimeout(() => setSelectedImage(null), 300); // Attend que l'animation se termine
+  };
+
+  return (
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* En-tête avec animation */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="mb-12 text-center"
+      >
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-700 to-brown-800">
+            Galerie Photo
+          </span>
+        </h1>
+        <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+          Découvrez nos moments forts et réalisations
+        </p>
+      </motion.div>
+
+      {/* Formulaire d'ajout */}
+      {user?.role === 'admin' && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-100"
+        >
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+            <FiImage className="mr-2 text-green-600" />
+            Ajouter une Image
+          </h2>
+          
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Titre*</label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
+                <input
+                  type="text"
+                  value={formData.category}
+                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="Événement, Projet, etc."
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Image*</label>
+              <label className={`block w-full border ${fileError ? 'border-red-500' : 'border-gray-300'} rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500`}>
+                <div className="flex items-center justify-between p-3">
+                  <span className={`truncate ${formData.fileName ? 'text-gray-800' : 'text-gray-500'}`}>
+                    {formData.fileName || "Sélectionner une image"}
+                  </span>
+                  <FiUpload className="text-green-600" />
+                </div>
+                <input
+                  type="file"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  required
+                  accept="image/*"
+                />
+              </label>
+              {fileError && <p className="mt-1 text-sm text-red-600">{fileError}</p>}
+              <p className="mt-1 text-xs text-gray-500">Formats acceptés : JPG, PNG, WEBP (max 5MB)</p>
+            </div>
+            
+            <button
+              type="submit"
+              className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-300 shadow-md"
+            >
+              Publier l'Image
+            </button>
+          </form>
+        </motion.div>
+      )}
+
+      {/* Galerie d'images */}
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-600"></div>
+        </div>
+      ) : images.length === 0 ? (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center py-16 bg-white rounded-xl shadow border border-gray-100"
+        >
+          <FiImage className="mx-auto text-4xl text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-700 mb-2">Galerie vide</h3>
+          <p className="text-gray-500">
+            {user?.role === 'admin' 
+              ? "Commencez par ajouter des images" 
+              : "Aucune image n'a été publiée pour le moment."}
+          </p>
+        </motion.div>
+      ) : (
+        <motion.div 
+          initial="hidden"
+          animate="visible"
+          variants={{
+            visible: {
+              transition: {
+                staggerChildren: 0.1
+              }
+            }
+          }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+        >
+          {images.map((image) => (
+            <motion.div
+              key={image.id}
+              variants={slideUp}
+              whileHover={{ y: -5, transition: { duration: 0.2 } }}
+            >
+              <div 
+                className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+                onClick={() => handleImageClick(image)}
+              >
+                <div className="relative pb-[100%] bg-gray-100">
+                  <img 
+                    src={image.image_url} 
+                    alt={image.title}
+                    className="absolute h-full w-full object-cover"
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="font-semibold text-gray-800 truncate">{image.title}</h3>
+                  {image.category && (
+                    <span className="inline-block mt-1 px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                      {image.category}
+                    </span>
+                  )}
+                  {user?.role === 'admin' && (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(image.id);
+                      }}
+                      className="mt-2 text-sm text-red-500 hover:text-red-700"
+                    >
+                      Supprimer
+                    </button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
+
+      {/* Modale de visualisation */}
+      <AnimatePresence>
+        {isModalOpen && selectedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4"
+            onClick={closeModal}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center p-4 border-b border-gray-200">
+                <h3 className="text-xl font-bold text-gray-800">{selectedImage.title}</h3>
+                <button 
+                  onClick={closeModal}
+                  className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
+                >
+                  <FiX size={24} />
+                </button>
+              </div>
+              
+              <div className="flex-grow flex items-center justify-center p-4 overflow-auto">
+                <motion.img
+                  src={selectedImage.image_url}
+                  alt={selectedImage.title}
+                  className="max-w-full max-h-[70vh] object-contain rounded"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                />
+              </div>
+              
+              {selectedImage.category && (
+                <div className="p-4 border-t border-gray-200">
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">Catégorie:</span> {selectedImage.category}
+                  </p>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+export default Gallery;
