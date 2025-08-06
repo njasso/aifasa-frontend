@@ -4,7 +4,7 @@ import { getProjects, createProject, updateProject, deleteProject } from '../ser
 import { getMembers } from '../services/memberService';
 import ProjectCard from '../components/ProjectCard';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title } from 'chart.js';
-import { Pie, Bar, Line } from 'react-chartjs-2';
+import { Pie, Line } from 'react-chartjs-2';
 
 // Configuration de Chart.js
 ChartJS.register(

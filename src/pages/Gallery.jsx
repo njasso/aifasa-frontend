@@ -4,27 +4,6 @@ import { getImages, createImage, deleteImage } from '../services/galleryService'
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiUpload, FiImage } from 'react-icons/fi';
 
-// Couleurs harmonisées
-const colors = {
-  primary: {
-    green: '#2b8a3e',
-    lightGreen: '#40c057',
-    darkGreen: '#1e6a2e',
-    brown: '#5c3c21',
-    lightBrown: '#8a5a44'
-  },
-  secondary: {
-    beige: '#f8f9fa',
-    lightBeige: '#e9ecef',
-    darkBeige: '#dee2e6'
-  }
-};
-
-// Animations
-const fadeIn = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.3 } }
-};
 
 const slideUp = {
   hidden: { y: 20, opacity: 0 },

@@ -4,7 +4,7 @@ import { getTreasury, createTransaction, getSummary, deleteTransaction, getMembe
 import { getMembers } from '../services/memberService';
 import FinanceTable from '../components/FinanceTable';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title as ChartTitle } from 'chart.js';
-import { Pie, Bar, Line } from 'react-chartjs-2';
+import { Pie, Line } from 'react-chartjs-2';
 
 // Enregistrement des composants Chart.js nécessaires
 ChartJS.register(
@@ -441,11 +441,13 @@ const getMemberName = (memberId) => {
 
   // Graphique linéaire moderne
   const historicalBalanceData = useMemo(() => {
-    const data = {};
-    transactions.forEach(t => {
-      const date = new Date(t.date).toISOString().split('T')[0];
-      data[date] = (data[date] || 0) + (t.caisse === 'budget_association' && t.amount || 0);
-    });
+  const data = {};
+  transactions.forEach(t => {
+    const date = new Date(t.date).toISOString().split('T')[0];
+    const amountToAdd = t.caisse === 'budget_association' ? t.amount : 0;
+    data[date] = (data[date] || 0) + amountToAdd;
+  });
+
     const sortedDates = Object.keys(data).sort();
     let cumulativeBalance = 0;
     const balances = sortedDates.map(date => {

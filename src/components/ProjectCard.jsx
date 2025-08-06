@@ -9,7 +9,6 @@ const ProjectCard = ({ project, onDelete, onEdit, userRole, members, onSelectFor
 
   // Définition des couleurs pour la cohérence visuelle
   const primaryGreen = 'text-emerald-700';
-  const neutralDark = 'text-gray-800';
   const neutralBorder = 'border-gray-200';
   const redBg = 'bg-red-500';
   const redHover = 'hover:bg-red-600';
