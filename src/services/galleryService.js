@@ -1,24 +1,13 @@
-import axios from 'axios';
+import api from './api';
+import axios from 'axios'; // L'importation d'axios est nécessaire si vous utilisez le code tel quel.
+// Cependant, il est préférable d'utiliser l'instance 'api' préconfigurée pour
+// s'assurer que les en-têtes et l'URL de base sont corrects.
 
-const API_URL = 'http://localhost:5000/api/gallery'; // Adaptez l'URL si nécessaire
-
-// Fonction utilitaire pour récupérer le token d'authentification
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      // Pour les requêtes avec fichier (FormData), le Content-Type est géré automatiquement par Axios
-      // quand vous passez un objet FormData comme corps de requête.
-      // Donc, pas besoin de le spécifier manuellement ici pour createImage.
-    }
-  };
-};
-
+// Récupère toutes les images
 export const getImages = async () => {
   try {
-    // La route GET /gallery pourrait aussi nécessiter une authentification si elle est protégée
-    const response = await axios.get(API_URL, getAuthHeaders());
+    // Utilise l'instance 'api' corrigée pour que l'URL de base (Render) soit correcte.
+    const response = await api.get('/gallery');
     return response.data;
   } catch (error) {
     console.error('Error fetching images:', error);
@@ -26,11 +15,17 @@ export const getImages = async () => {
   }
 };
 
+// Crée une nouvelle image
 export const createImage = async (data) => {
   try {
-    // Axios gère automatiquement 'Content-Type': 'multipart/form-data' quand 'data' est une instance de FormData.
-    // Il suffit de passer les headers d'authentification.
-    const response = await axios.post(API_URL, data, getAuthHeaders());
+    // Utilise l'instance 'api' corrigée
+    const response = await api.post('/gallery', data, {
+      headers: {
+        // Axios gère automatiquement le Content-Type pour FormData,
+        // nous n'avons donc besoin de spécifier que les autres en-têtes.
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   } catch (error) {
     console.error('Error creating image:', error);
@@ -38,9 +33,11 @@ export const createImage = async (data) => {
   }
 };
 
+// Supprime une image par son ID
 export const deleteImage = async (id) => {
   try {
-    const response = await axios.delete(`${API_URL}/${id}`, getAuthHeaders());
+    // Utilise l'instance 'api' corrigée
+    const response = await api.delete(`/gallery/${id}`);
     return response.data;
   } catch (error) {
     console.error('Error deleting image:', error);
