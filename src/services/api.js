@@ -1,8 +1,10 @@
 import axios from 'axios';
 
-// Correction: le nom de la variable d'environnement a été mis à jour
-// pour correspondre à celui configuré sur Netlify.
-const API_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+// La variable d'environnement est utilisée pour l'URL de base.
+// Le préfixe '/api' est ajouté ici pour s'assurer que la route est toujours correcte.
+const API_URL = process.env.REACT_APP_API_BASE_URL 
+  ? `${process.env.REACT_APP_API_BASE_URL}/api` 
+  : 'http://localhost:5000/api';
 
 const api = axios.create({
   baseURL: API_URL,
