@@ -434,7 +434,7 @@ const Home = () => {
                 &copy; {new Date().getFullYear()} AIFASA 17. Tous droits réservés.
               </p>
               <p className="text-emerald-300 text-sm mt-2">
-                Conçu avec passion pour la promotion 17
+                Conçu par la Nouvelle Académie numérique Africaine "NA2" pour la promotion 17
               </p>
             </div>
           </div>
