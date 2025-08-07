@@ -9,7 +9,7 @@ const Home = () => {
   const activities = [
     { id: 1, title: "Séminaire sur l'Agro-pastoralisme", description: "Discussion sur les techniques modernes et durables.", date: "25 Février 2025" },
     { id: 2, title: "Atelier de Mentorat", description: "Accompagnement des jeunes ingénieurs dans leur carrière.", date: "10 Mars 2025" },
-    { id: 3, title: "Campagne de Sensibilisation", description: "Promotion de l'éducation en milieu rural.", date: "15 Avril 2025" },
+    { id: 3, title: "Assemblé Générale", description: "Renontre trimestrielle de L'AG à Kribi.", date: "12 Juillet 2025" },
   ];
 
   const projects = [
