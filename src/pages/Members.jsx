@@ -1,13 +1,57 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { getMembers, createMember, updateMember, deleteMember } from '../services/memberService';
-import MemberCard from '../components/MemberCard';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { motion } from 'framer-motion';
-import { FiUser, FiUsers, FiPlus, FiSearch, FiUpload, FiXCircle, Pie, Bar } from 'react-icons/fi';
+import { FiUser, FiUsers, FiPlus, FiSearch, FiUpload, FiXCircle, FiPhone, FiMapPin, FiFileText } from 'react-icons/fi';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
+import { Pie, Bar } from 'react-chartjs-2';
 
 // Enregistrement des composants Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
+
+// Définition de dépendances factices pour rendre le code autonome.
+// Dans votre projet, ces dépendances seraient importées de fichiers séparés.
+const useAuth = () => ({
+  user: { role: 'admin' } // Simuler un utilisateur admin connecté
+});
+
+const memberService = {
+  getMembers: () => new Promise(resolve => {
+    // Données fictives pour simuler un appel API
+    const mockMembers = [
+      { id: '1', first_name: 'Jean', last_name: 'Dupont', sex: 'Homme', contact: '0612345678', role: 'Bureau Exécutif', profession: 'Ingénieur Agronome', profile_picture_url: 'https://placehold.co/100x100' },
+      { id: '2', first_name: 'Marie', last_name: 'Curie', sex: 'Femme', contact: '0712345678', role: 'Comité Adhoc', profession: 'Ingénieur des Eaux et Forêts', profile_picture_url: 'https://placehold.co/100x100' },
+      { id: '3', first_name: 'Pierre', last_name: 'Martin', sex: 'Homme', contact: '0698765432', role: 'Membre', profession: 'Ingénieur Génie Rural', profile_picture_url: 'https://placehold.co/100x100' },
+      { id: '4', first_name: 'Sophie', last_name: 'Dubois', sex: 'Femme', contact: '0798765432', role: 'Membre', profession: 'Ingénieur Agronome', profile_picture_url: 'https://placehold.co/100x100' },
+    ];
+    setTimeout(() => resolve(mockMembers), 500);
+  }),
+  createMember: (formData) => new Promise(resolve => {
+    console.log('Création de membre avec les données:', Object.fromEntries(formData));
+    setTimeout(() => resolve({ id: Date.now().toString(), ...Object.fromEntries(formData) }), 500);
+  }),
+  updateMember: (id, formData) => new Promise(resolve => {
+    console.log('Mise à jour de membre', id, 'avec les données:', Object.fromEntries(formData));
+    setTimeout(() => resolve({ id, ...Object.fromEntries(formData) }), 500);
+  }),
+  deleteMember: (id) => new Promise(resolve => {
+    console.log('Suppression de membre', id);
+    setTimeout(() => resolve(), 500);
+  }),
+};
+
+// Composant de carte de membre (MemberCard) simplifié pour la démonstration
+const MemberCard = ({ member, onDelete, onEdit }) => {
+  return (
+    <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center text-center hover:shadow-xl transition-all duration-300">
+      <img src={member.profile_picture_url || 'https://placehold.co/100x100'} alt={member.first_name} className="w-24 h-24 rounded-full object-cover mb-4 border-4 border-emerald-300" />
+      <h3 className="text-xl font-bold text-gray-800">{member.first_name} {member.last_name}</h3>
+      <p className="text-sm text-gray-500 mb-2">{member.role}</p>
+      <div className="mt-auto pt-4 flex gap-2">
+        <button onClick={() => onEdit(member)} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold hover:bg-blue-200 transition">Éditer</button>
+        <button onClick={() => onDelete(member.id)} className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-semibold hover:bg-red-200 transition">Supprimer</button>
+      </div>
+    </div>
+  );
+};
 
 // Composant Modal pour remplacer les alertes natives
 const Modal = ({ message, onConfirm, onCancel, showConfirm = true, showCancel = true, isError = false }) => {
@@ -41,8 +85,17 @@ const Modal = ({ message, onConfirm, onCancel, showConfirm = true, showCancel = 
   );
 };
 
+// Définition des animations de carte pour Framer Motion
+const fadeIn = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: { opacity: 1, scale: 1 },
+};
+
 const Members = () => {
+  // Contexte d'authentification pour obtenir les informations de l'utilisateur
   const { user } = useAuth();
+  
+  // États locaux
   const [members, setMembers] = useState([]);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -61,258 +114,114 @@ const Members = () => {
     cvFile: null,
     cvFileName: ''
   });
-  const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterRole, setFilterRole] = useState('all');
-  const [filterProfession, setFilterProfession] = useState('all');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [profilePictureError, setProfilePictureError] = useState('');
-  const [cvFileError, setCvFileError] = useState('');
-
-  // État pour la gestion des modals (confirmation, succès, erreur)
-  const [modalState, setModalState] = useState({
-    isOpen: false,
-    message: '',
-    onConfirm: null,
-    onCancel: null,
-    showConfirm: true,
-    showCancel: true,
-    isError: false,
-  });
-
+  const [error, setError] = useState(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [currentMemberId, setCurrentMemberId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [memberToDeleteId, setMemberToDeleteId] = useState(null);
 
-  // Options pour les menus déroulants
-  const rolesOptions = ['Bureau Exécutif', 'Comité Adhoc', 'Membre'];
-  const sexOptions = ['Homme', 'Femme'];
-  const professionOptions = [
-    'Ingénieur Agronome',
-    'Ingénieur des Eaux et Forêts',
-    'Ingénieur Génie Rural',
-    'Ingénieur Économie Agricole',
-    'Ingénieur Halieute',
-    'Autre'
-  ];
-
-  // Animation variants
-  const fadeIn = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
+  // Fonction pour charger les membres depuis le backend
+  const loadMembers = async () => {
+    try {
+      setLoading(true);
+      const data = await memberService.getMembers();
+      setMembers(data);
+      setError(null);
+    } catch (err) {
+      console.error("Erreur lors du chargement des membres :", err);
+      setError("Impossible de charger les membres.");
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // Effet pour charger les membres au montage du composant
   useEffect(() => {
-    const fetchMembers = async () => {
-      setLoading(true);
-      try {
-        const data = await getMembers();
-        setMembers(data);
-      } catch (error) {
-        console.error('Erreur lors du chargement des membres:', error);
-        setModalState({
-          isOpen: true,
-          message: 'Erreur lors du chargement des membres.',
-          onConfirm: () => setModalState({ isOpen: false }),
-          onCancel: null,
-          showCancel: false,
-          isError: true,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchMembers();
+    loadMembers();
   }, []);
 
-  const handleOpenDeleteModal = (id) => {
-    const memberName = members.find(m => m.id === id)?.first_name + ' ' + members.find(m => m.id === id)?.last_name;
-    setMemberToDeleteId(id);
-    setModalState({
-      isOpen: true,
-      message: `Êtes-vous sûr de vouloir supprimer ${memberName} ? Cette action est irréversible.`,
-      onConfirm: confirmDelete,
-      onCancel: () => setModalState({ isOpen: false }),
-      showConfirm: true,
-      showCancel: true,
-      isError: false,
-    });
+  // Utilisation de useMemo pour séparer les admins et les membres réguliers
+  // Cela évite de refaire le calcul à chaque rendu si les membres n'ont pas changé.
+  const { admins, executiveBureau, adhocCommittee, regularMembers } = useMemo(() => {
+    const admins = members.filter(member => member.role === 'admin');
+    const executiveBureau = members.filter(member => member.role === 'Bureau Exécutif');
+    const adhocCommittee = members.filter(member => member.role === 'Comité Adhoc');
+    const regularMembers = members.filter(member => member.role === 'Membre');
+    return { admins, executiveBureau, adhocCommittee, regularMembers };
+  }, [members]);
+
+  // Utilisation de useMemo pour filtrer les membres
+  const filteredMembers = useMemo(() => {
+    const allMembers = [...executiveBureau, ...adhocCommittee, ...regularMembers];
+    if (!searchQuery) return allMembers;
+    const lowerCaseQuery = searchQuery.toLowerCase();
+    return allMembers.filter(member =>
+      (member.first_name && member.first_name.toLowerCase().includes(lowerCaseQuery)) ||
+      (member.last_name && member.last_name.toLowerCase().includes(lowerCaseQuery)) ||
+      (member.contact && member.contact.toLowerCase().includes(lowerCaseQuery))
+    );
+  }, [searchQuery, executiveBureau, adhocCommittee, regularMembers]);
+
+  // Fonctions de gestion de formulaire
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const confirmDelete = async () => {
-    if (!memberToDeleteId) return;
-
-    setModalState({ ...modalState, isOpen: false });
-    
-    try {
-      await deleteMember(memberToDeleteId);
-      setMembers(members.filter(m => m.id !== memberToDeleteId));
-      setModalState({
-        isOpen: true,
-        message: 'Membre supprimé avec succès !',
-        onConfirm: () => setModalState({ isOpen: false }),
-        onCancel: null,
-        showCancel: false,
-        isError: false,
-      });
-    } catch (error) {
-      console.error('Erreur lors de la suppression du membre:', error);
-      setModalState({
-        isOpen: true,
-        message: 'Échec de la suppression du membre. Veuillez vérifier la console.',
-        onConfirm: () => setModalState({ isOpen: false }),
-        onCancel: null,
-        showCancel: false,
-        isError: true,
-      });
-    } finally {
-      setMemberToDeleteId(null);
+  // Fonction pour gérer les changements de fichiers (photo de profil et CV)
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    if (files.length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        [name]: files[0],
+        [`${name}FileName`]: files[0].name
+      }));
     }
   };
 
+  // Fonction de soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setProfilePictureError('');
-    setCvFileError('');
-    
-    // Validation des champs obligatoires
-    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.sex.trim() || !formData.role.trim() || !formData.profession.trim()) {
-      setModalState({
-        isOpen: true,
-        message: 'Veuillez remplir au moins les champs obligatoires : Prénom, Nom, Sexe, Rôle, Profession.',
-        onConfirm: () => setModalState({ isOpen: false }),
-        onCancel: null,
-        showCancel: false,
-        isError: true,
-      });
-      return;
+
+    // Construction de l'objet FormData pour envoyer les données et les fichiers
+    const dataToSend = new FormData();
+    for (const key in formData) {
+      // Les clés de fichiers sont traitées séparément
+      if (key !== 'profilePicture' && key !== 'cvFile') {
+        dataToSend.append(key, formData[key]);
+      }
+    }
+    // Ajout des fichiers s'ils existent
+    if (formData.profilePicture) {
+        dataToSend.append('profilePicture', formData.profilePicture);
+    }
+    if (formData.cvFile) {
+        dataToSend.append('cv', formData.cvFile);
     }
 
-    // Validation de la taille des fichiers
-    if (formData.profilePicture && formData.profilePicture.size > 5 * 1024 * 1024) {
-      setProfilePictureError('La photo de profil ne doit pas dépasser 5MB');
-      return;
-    }
-    if (formData.cvFile && formData.cvFile.size > 10 * 1024 * 1024) {
-      setCvFileError('Le fichier CV ne doit pas dépasser 10MB');
-      return;
-    }
-
-    setIsSubmitting(true);
-    
     try {
-      const data = new FormData();
-      // Ajout des champs de texte
-      data.append('firstName', formData.firstName);
-      data.append('lastName', formData.lastName);
-      data.append('sex', formData.sex);
-      data.append('location', formData.location);
-      data.append('address', formData.address);
-      data.append('contact', formData.contact);
-      data.append('profession', formData.profession);
-      data.append('employmentStructure', formData.employmentStructure);
-      data.append('companyOrProject', formData.companyOrProject);
-      data.append('activities', formData.activities);
-      data.append('role', formData.role);
-
-      // Ajout conditionnel des fichiers
-      // IMPORTANT : le nom du champ doit correspondre à celui attendu par votre backend (ex: 'profilePicture', 'cv').
-      if (formData.profilePicture) {
-        data.append('profilePicture', formData.profilePicture);
-      }
-      if (formData.cvFile) {
-        data.append('cv', formData.cvFile);
-      }
-
-      let newMember;
-      if (editingId) {
-        newMember = await updateMember(editingId, data);
-        setMembers(members.map(m => m.id === editingId ? newMember : m));
-        setEditingId(null);
-        setModalState({
-          isOpen: true,
-          message: 'Membre mis à jour avec succès !',
-          onConfirm: () => setModalState({ isOpen: false }),
-          onCancel: null,
-          showCancel: false
-        });
+      if (isEditMode) {
+        await memberService.updateMember(currentMemberId, dataToSend);
+        console.log("Membre mis à jour avec succès!");
       } else {
-        newMember = await createMember(data);
-        setMembers([newMember, ...members]);
-        setModalState({
-          isOpen: true,
-          message: 'Membre ajouté avec succès !',
-          onConfirm: () => setModalState({ isOpen: false }),
-          onCancel: null,
-          showCancel: false
-        });
+        await memberService.createMember(dataToSend);
+        console.log("Membre ajouté avec succès!");
       }
-      
-      // Réinitialisation du formulaire
-      setFormData({
-        firstName: '', lastName: '', sex: '', location: '', address: '',
-        contact: '', profession: '', employmentStructure: '', companyOrProject: '',
-        activities: '', role: '', profilePicture: null, profilePictureFileName: '',
-        cvFile: null, cvFileName: ''
-      });
-      setProfilePictureError('');
-      setCvFileError('');
-      // Réinitialisation du champ de fichier HTML
-      e.target.reset();
-    } catch (error) {
-      console.error('Erreur lors de l\'opération sur le membre:', error);
-      setModalState({
-        isOpen: true,
-        message: `Échec de l'opération: ${error.message || 'Erreur inconnue'}`,
-        onConfirm: () => setModalState({ isOpen: false }),
-        onCancel: null,
-        showCancel: false,
-        isError: true,
-      });
-    } finally {
-      setIsSubmitting(false);
+      resetForm();
+      loadMembers(); // Recharger les membres pour voir les changements
+      setIsFormOpen(false);
+    } catch (err) {
+      console.error("Erreur lors de l'opération :", err);
+      setError("Erreur lors de l'opération. Veuillez réessayer.");
     }
   };
 
-  const handleProfilePictureChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setProfilePictureError('Le fichier ne doit pas dépasser 5MB');
-        return;
-      }
-      setFormData({
-        ...formData,
-        profilePicture: file,
-        profilePictureFileName: file.name
-      });
-      setProfilePictureError('');
-    } else {
-      setFormData({ ...formData, profilePicture: null, profilePictureFileName: '' });
-    }
-  };
-  
-  const handleCvFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        setCvFileError('Le fichier CV ne doit pas dépasser 10MB');
-        return;
-      }
-      setFormData({
-        ...formData,
-        cvFile: file,
-        cvFileName: file.name
-      });
-      setCvFileError('');
-    } else {
-      setFormData({ ...formData, cvFile: null, cvFileName: '' });
-    }
-  };
-
+  // Fonction pour préparer le formulaire en mode édition
   const handleEdit = (member) => {
-    setEditingId(member.id);
-    // Assurez-vous que les champs 'company_or_project', 'employment_structure', etc.,
-    // sont correctement mappés depuis l'objet membre retourné par le backend.
     setFormData({
       firstName: member.first_name || '',
       lastName: member.last_name || '',
@@ -330,414 +239,356 @@ const Members = () => {
       cvFile: null, // Les fichiers ne sont pas pré-remplis
       cvFileName: '' // Réinitialiser le nom du fichier pour l'upload
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setCurrentMemberId(member.id);
+    setIsEditMode(true);
+    setIsFormOpen(true);
   };
 
-  const filteredMembers = useMemo(() => {
-    return members.filter(member => {
-      const fullName = `${member.first_name || ''} ${member.last_name || ''}`.toLowerCase();
-      const matchesSearch = fullName.includes(searchTerm.toLowerCase()) || (member.profession || '').toLowerCase().includes(searchTerm.toLowerCase()) || (member.location || '').toLowerCase().includes(searchTerm.toLowerCase()) || (member.contact || '').toLowerCase().includes(searchTerm.toLowerCase()) || (member.address || '').toLowerCase().includes(searchTerm.toLowerCase()) || (member.employment_structure || '').toLowerCase().includes(searchTerm.toLowerCase()) || (member.company_or_project || '').toLowerCase().includes(searchTerm.toLowerCase()) || (member.activities || '').toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesRole = filterRole === 'all' || (member.role || '').toLowerCase() === filterRole.toLowerCase();
-      const matchesProfession = filterProfession === 'all' || (member.profession || '').toLowerCase() === filterProfession.toLowerCase();
-      return matchesSearch && matchesRole && matchesProfession;
+  // Fonction pour ouvrir la modale de confirmation de suppression
+  const handleOpenDeleteModal = (id) => {
+    setMemberToDeleteId(id);
+    setShowDeleteModal(true);
+  };
+
+  // Fonction de suppression d'un membre
+  const handleDelete = async () => {
+    try {
+      await memberService.deleteMember(memberToDeleteId);
+      console.log("Membre supprimé avec succès!");
+      loadMembers();
+    } catch (err) {
+      console.error("Erreur lors de la suppression :", err);
+      setError("Erreur lors de la suppression. Veuillez réessayer.");
+    } finally {
+      setShowDeleteModal(false);
+      setMemberToDeleteId(null);
+    }
+  };
+
+  // Fonction pour réinitialiser le formulaire
+  const resetForm = () => {
+    setFormData({
+      firstName: '',
+      lastName: '',
+      sex: '',
+      location: '',
+      address: '',
+      contact: '',
+      profession: '',
+      employmentStructure: '',
+      companyOrProject: '',
+      activities: '',
+      role: '',
+      profilePicture: null,
+      profilePictureFileName: '',
+      cvFile: null,
+      cvFileName: ''
     });
-  }, [members, searchTerm, filterRole, filterProfession]);
+    setIsEditMode(false);
+    setCurrentMemberId(null);
+  };
 
-  const executiveBureau = useMemo(() => filteredMembers.filter(m => m.role === 'Bureau Exécutif'), [filteredMembers]);
-  const adhocCommittee = useMemo(() => filteredMembers.filter(m => m.role === 'Comité Adhoc'), [filteredMembers]);
-  const regularMembers = useMemo(() => filteredMembers.filter(m => m.role === 'Membre'), [filteredMembers]);
-
-  // Données de graphique - Rôle
-  const roleData = useMemo(() => {
-    const roleCounts = {
-      'Bureau Exécutif': 0,
-      'Comité Adhoc': 0,
-      'Membre': 0
-    };
-    members.forEach(member => {
-      if (roleCounts.hasOwnProperty(member.role)) {
-        roleCounts[member.role]++;
-      }
-    });
-
-    return {
-      labels: Object.keys(roleCounts),
-      datasets: [
-        {
-          label: 'Nombre par Rôle',
-          data: Object.values(roleCounts),
-          backgroundColor: [
-            'rgba(255, 99, 132, 0.7)',
-            'rgba(54, 162, 235, 0.7)',
-            'rgba(75, 192, 192, 0.7)',
-          ],
-          borderColor: [
-            'rgba(255, 99, 132, 1)',
-            'rgba(54, 162, 235, 1)',
-            'rgba(75, 192, 192, 1)',
-          ],
-          borderWidth: 1,
-        },
-      ],
-    };
-  }, [members]);
-
-  // Données de graphique - Sexe
-  const genderData = useMemo(() => ({
-    labels: ['Hommes', 'Femmes'],
-    datasets: [{
-      data: [
-        members.filter(m => m.sex === 'Homme').length,
-        members.filter(m => m.sex === 'Femme').length,
-      ],
-      backgroundColor: ['rgba(59, 130, 246, 0.7)', 'rgba(236, 72, 153, 0.7)'],
-      borderColor: ['rgba(59, 130, 246, 1)', 'rgba(236, 72, 153, 1)'],
-      borderWidth: 1,
-    }]
-  }), [members]);
-
-  // Données de graphique - Profession
-  const professionChartData = useMemo(() => {
-    const professionCounts = members.reduce((acc, member) => {
-      if (member.profession) {
-        acc[member.profession] = (acc[member.profession] || 0) + 1;
-      }
-      return acc;
-    }, {});
-    return {
-      labels: Object.keys(professionCounts),
-      datasets: [{
-        label: 'Nombre par Profession',
-        data: Object.values(professionCounts),
-        backgroundColor: [
-          'rgba(16, 185, 129, 0.7)',
-          'rgba(245, 158, 11, 0.7)',
-          'rgba(99, 102, 241, 0.7)',
-          'rgba(239, 68, 68, 0.7)',
-          'rgba(107, 114, 128, 0.7)',
-          'rgba(139, 92, 246, 0.7)',
-          'rgba(6, 182, 212, 0.7)'
-        ],
-        borderColor: [
-          'rgba(16, 185, 129, 1)',
-          'rgba(245, 158, 11, 1)',
-          'rgba(99, 102, 241, 1)',
-          'rgba(239, 68, 68, 1)',
-          'rgba(107, 114, 128, 1)',
-          'rgba(139, 92, 246, 1)',
-          'rgba(6, 182, 212, 1)'
-        ],
-        borderWidth: 1,
-      }]
-    };
-  }, [members]);
 
   // Rendu de la page
   if (loading) return <p className="text-center text-xl mt-10">Chargement des membres...</p>;
+  if (error) return <p className="text-center text-red-500 mt-10">{error}</p>;
 
   return (
     <div className="container mx-auto p-4 md:p-8 bg-gray-50 min-h-screen">
-      {/* Modal pour les messages et confirmations */}
-      {modalState.isOpen && (
-        <Modal
-          message={modalState.message}
-          onConfirm={modalState.onConfirm}
-          onCancel={modalState.onCancel}
-          showConfirm={modalState.showConfirm}
-          showCancel={modalState.showCancel}
-          isError={modalState.isError}
-        />
-      )}
-
       <h1 className="text-4xl font-extrabold mb-8 text-center text-emerald-800">Gestion des Membres</h1>
 
       {user?.role === 'admin' && (
         <div className="flex justify-center mb-8">
           <button
-            onClick={() => { setEditingId(null); setFormData({
-              firstName: '', lastName: '', sex: '', location: '', address: '',
-              contact: '', profession: '', employmentStructure: '', companyOrProject: '',
-              activities: '', role: '', profilePicture: null, profilePictureFileName: '',
-              cvFile: null, cvFileName: ''
-            }); }}
+            onClick={() => { setIsFormOpen(true); resetForm(); }}
             className="px-6 py-3 bg-emerald-600 text-white rounded-full shadow-lg hover:bg-emerald-700 transition-transform transform hover:scale-105 flex items-center"
           >
-            <FiPlus className="mr-2" /> {editingId ? 'Modifier' : 'Ajouter'} un membre
+            <FiPlus className="mr-2" /> Ajouter un membre
           </button>
         </div>
       )}
 
-      {/* Formulaire d'ajout/modification */}
-      { (user?.role === 'admin' || editingId) && (
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-white p-8 rounded-lg shadow-xl max-w-4xl mx-auto mb-12"
-        >
-          <h2 className="text-2xl font-bold mb-6 text-emerald-800 border-b-2 pb-2 border-emerald-600">{editingId ? 'Modifier un membre' : 'Ajouter un nouveau membre'}</h2>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Champs de formulaire */}
-            <div>
-              <label htmlFor="firstName" className="block text-gray-700 font-semibold mb-2">Prénom</label>
-              <input type="text" id="firstName" name="firstName" value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
-            </div>
-            <div>
-              <label htmlFor="lastName" className="block text-gray-700 font-semibold mb-2">Nom de famille</label>
-              <input type="text" id="lastName" name="lastName" value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
-            </div>
-            <div>
-              <label htmlFor="sex" className="block text-gray-700 font-semibold mb-2">Sexe</label>
-              <select id="sex" name="sex" value={formData.sex} onChange={(e) => setFormData({...formData, sex: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" required>
-                <option value="">Sélectionnez le sexe</option>
-                {sexOptions.map(option => <option key={option} value={option}>{option}</option>)}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="contact" className="block text-gray-700 font-semibold mb-2">Contact</label>
-              <input type="text" id="contact" name="contact" value={formData.contact} onChange={(e) => setFormData({...formData, contact: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" required />
-            </div>
-            <div>
-              <label htmlFor="profession" className="block text-gray-700 font-semibold mb-2">Profession</label>
-              <select id="profession" name="profession" value={formData.profession} onChange={(e) => setFormData({...formData, profession: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" required>
-                <option value="">Sélectionnez une profession</option>
-                {professionOptions.map(option => <option key={option} value={option}>{option}</option>)}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="employmentStructure" className="block text-gray-700 font-semibold mb-2">Structure d'emploi</label>
-              <input type="text" id="employmentStructure" name="employmentStructure" value={formData.employmentStructure} onChange={(e) => setFormData({...formData, employmentStructure: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-            </div>
-            <div>
-              <label htmlFor="companyOrProject" className="block text-gray-700 font-semibold mb-2">Entreprise/Projet</label>
-              <input type="text" id="companyOrProject" name="companyOrProject" value={formData.companyOrProject} onChange={(e) => setFormData({...formData, companyOrProject: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-            </div>
-            <div>
-              <label htmlFor="role" className="block text-gray-700 font-semibold mb-2">Rôle</label>
-              <select id="role" name="role" value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" required>
-                <option value="">Sélectionnez un rôle</option>
-                {rolesOptions.map(option => <option key={option} value={option}>{option}</option>)}
-              </select>
-            </div>
-            <div className="md:col-span-2">
-              <label htmlFor="location" className="block text-gray-700 font-semibold mb-2">Localisation</label>
-              <input type="text" id="location" name="location" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-            </div>
-            <div className="md:col-span-2">
-              <label htmlFor="address" className="block text-gray-700 font-semibold mb-2">Adresse</label>
-              <input type="text" id="address" name="address" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-            </div>
-            <div className="md:col-span-2">
-              <label htmlFor="activities" className="block text-gray-700 font-semibold mb-2">Activités</label>
-              <textarea id="activities" name="activities" value={formData.activities} onChange={(e) => setFormData({...formData, activities: e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" rows="3"></textarea>
-            </div>
-            {/* Champs de fichier */}
-            <div className="md:col-span-1">
-              <label htmlFor="profilePicture" className="block text-gray-700 font-semibold mb-2 flex items-center">
-                <FiUpload className="mr-2" /> Photo de profil
-              </label>
-              <input type="file" id="profilePicture" name="profilePicture" onChange={handleProfilePictureChange} className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100" />
-              {profilePictureError && <p className="text-red-500 text-sm mt-1">{profilePictureError}</p>}
-            </div>
-            <div className="md:col-span-1">
-              <label htmlFor="cvFile" className="block text-gray-700 font-semibold mb-2 flex items-center">
-                <FiUpload className="mr-2" /> CV du membre
-              </label>
-              <input type="file" id="cvFile" name="cvFile" onChange={handleCvFileChange} className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100" />
-              {cvFileError && <p className="text-red-500 text-sm mt-1">{cvFileError}</p>}
-            </div>
-            <div className="md:col-span-2 flex justify-end">
-              <button type="submit" disabled={isSubmitting} className="px-6 py-3 bg-emerald-600 text-white rounded-lg shadow-lg hover:bg-emerald-700 transition-transform transform hover:scale-105 disabled:bg-gray-400">
-                {isSubmitting ? 'Envoi en cours...' : editingId ? 'Enregistrer les modifications' : 'Ajouter le membre'}
-              </button>
-            </div>
-          </form>
-        </motion.div>
+      {/* Modals */}
+      {showDeleteModal && (
+        <Modal
+          message="Êtes-vous sûr de vouloir supprimer ce membre ?"
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteModal(false)}
+        />
       )}
 
-      {/* Barre de recherche et filtres */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="bg-white shadow-lg rounded-xl p-6 mb-8 border border-gray-100"
-      >
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-grow">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FiSearch className="text-gray-400" />
+      {isFormOpen && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ y: "-100vh", opacity: 0 }}
+            animate={{ y: "0", opacity: 1 }}
+            exit={{ y: "100vh", opacity: 0 }}
+            className="bg-white p-8 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-emerald-800">{isEditMode ? "Modifier un membre" : "Ajouter un membre"}</h2>
+              <button onClick={() => setIsFormOpen(false)} className="text-gray-500 hover:text-gray-800">
+                <FiXCircle className="text-3xl" />
+              </button>
             </div>
-            <input
-              type="text"
-              placeholder="Rechercher par nom, profession, localisation..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            />
-          </div>
-          
-          <div className="relative w-full sm:w-64">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FiUser className="text-gray-400" />
-            </div>
-            <select
-              value={filterRole}
-              onChange={(e) => setFilterRole(e.target.value)}
-              className="pl-10 border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 appearance-none bg-white"
-            >
-              <option value="all">Tous les rôles</option>
-              {rolesOptions.map(option => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="relative w-full sm:w-64">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FiUser className="text-gray-400" />
-            </div>
-            <select
-              value={filterProfession}
-              onChange={(e) => setFilterProfession(e.target.value)}
-              className="pl-10 border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 appearance-none bg-white"
-            >
-              <option value="all">Toutes les professions</option>
-              {professionOptions.map(option => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Section des Statistiques */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        className="bg-white shadow-lg rounded-xl p-6 mb-8 border border-gray-100"
-      >
-        <h2 className="text-2xl font-bold mb-6 text-emerald-800 flex items-center">
-          <FiUser className="mr-2" />
-          Statistiques des Membres
-        </h2>
-        
-        {members.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-4 text-center">Répartition Hommes / Femmes</h3>
-              <div className="mx-auto w-3/4 md:w-full max-w-sm">
-                <Pie 
-                  data={genderData} 
-                  options={{ 
-                    responsive: true, 
-                    plugins: { 
-                      legend: { position: 'bottom' },
-                      tooltip: {
-                        callbacks: {
-                          label: function(context) {
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const value = context.raw;
-                            const percentage = Math.round((value / total) * 100);
-                            return `${context.label}: ${value} (${percentage}%)`;
-                          }
-                        }
-                      }
-                    } 
-                  }} 
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Champ de nom */}
+              <div>
+                <label htmlFor="firstName" className="block text-gray-700 font-semibold mb-2">Prénom</label>
+                <input
+                  type="text"
+                  id="firstName"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  required
                 />
               </div>
-            </div>
-            
-            <div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-4 text-center">Membres par Profession</h3>
-              <div className="mx-auto w-full max-w-md">
-                <Bar 
-                  data={professionChartData} 
-                  options={{ 
-                    responsive: true, 
-                    plugins: { 
-                      legend: { display: false },
-                      title: {
-                        display: false
-                      }
-                    },
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                        ticks: {
-                          precision: 0
-                        }
-                      }
-                    }
-                  }} 
+              {/* Champ de nom de famille */}
+              <div>
+                <label htmlFor="lastName" className="block text-gray-700 font-semibold mb-2">Nom de famille</label>
+                <input
+                  type="text"
+                  id="lastName"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  required
                 />
               </div>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center py-8 bg-gray-50 rounded-lg">
-            <FiUser className="mx-auto text-4xl text-gray-400 mb-3" />
-            <p className="text-gray-600">Aucune donnée de membre pour les statistiques</p>
-          </div>
-        )}
-      </motion.div>
+              {/* Champ de sexe */}
+              <div>
+                <label htmlFor="sex" className="block text-gray-700 font-semibold mb-2">Sexe</label>
+                <select
+                  id="sex"
+                  name="sex"
+                  value={formData.sex}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  required
+                >
+                  <option value="">Sélectionnez le sexe</option>
+                  <option value="Homme">Homme</option>
+                  <option value="Femme">Femme</option>
+                </select>
+              </div>
+              {/* Champ de profession */}
+              <div>
+                <label htmlFor="profession" className="block text-gray-700 font-semibold mb-2">Profession</label>
+                <input
+                  type="text"
+                  id="profession"
+                  name="profession"
+                  value={formData.profession}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              {/* Champ de structure d'emploi */}
+              <div>
+                <label htmlFor="employmentStructure" className="block text-gray-700 font-semibold mb-2">Structure d'emploi</label>
+                <input
+                  type="text"
+                  id="employmentStructure"
+                  name="employmentStructure"
+                  value={formData.employmentStructure}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              {/* Champ d'entreprise/projet */}
+              <div>
+                <label htmlFor="companyOrProject" className="block text-gray-700 font-semibold mb-2">Entreprise/Projet</label>
+                <input
+                  type="text"
+                  id="companyOrProject"
+                  name="companyOrProject"
+                  value={formData.companyOrProject}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              {/* Champ de contact */}
+              <div>
+                <label htmlFor="contact" className="block text-gray-700 font-semibold mb-2">Contact</label>
+                <input
+                  type="text"
+                  id="contact"
+                  name="contact"
+                  value={formData.contact}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  required
+                />
+              </div>
+              {/* Champ de rôle */}
+              <div>
+                <label htmlFor="role" className="block text-gray-700 font-semibold mb-2">Rôle</label>
+                <select
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  required
+                >
+                  <option value="">Sélectionnez un rôle</option>
+                  <option value="admin">Administrateur</option>
+                  <option value="Bureau Exécutif">Bureau Exécutif</option>
+                  <option value="Comité Adhoc">Comité Adhoc</option>
+                  <option value="Membre">Membre</option>
+                </select>
+              </div>
+              {/* Champ d'adresse */}
+              <div>
+                <label htmlFor="address" className="block text-gray-700 font-semibold mb-2">Adresse</label>
+                <input
+                  type="text"
+                  id="address"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              {/* Champ de localisation */}
+              <div>
+                <label htmlFor="location" className="block text-gray-700 font-semibold mb-2">Localisation</label>
+                <input
+                  type="text"
+                  id="location"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              {/* Champ d'activités */}
+              <div className="md:col-span-2">
+                <label htmlFor="activities" className="block text-gray-700 font-semibold mb-2">Activités</label>
+                <textarea
+                  id="activities"
+                  name="activities"
+                  value={formData.activities}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  rows="3"
+                ></textarea>
+              </div>
+              {/* Champ de photo de profil */}
+              <div className="md:col-span-2">
+                <label htmlFor="profilePicture" className="block text-gray-700 font-semibold mb-2 flex items-center">
+                  <FiUpload className="mr-2" /> Photo de profil
+                </label>
+                <input
+                  type="file"
+                  id="profilePicture"
+                  name="profilePicture"
+                  onChange={handleFileChange}
+                  className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                />
+              </div>
+              {/* Champ de CV */}
+              <div className="md:col-span-2">
+                <label htmlFor="cvFile" className="block text-gray-700 font-semibold mb-2 flex items-center">
+                  <FiUpload className="mr-2" /> CV du membre
+                </label>
+                <input
+                  type="file"
+                  id="cvFile"
+                  name="cvFile"
+                  onChange={handleFileChange}
+                  className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                />
+              </div>
 
-      {/* Affichage des membres */}
-      {loading ? (
-        <div className="flex flex-col items-center justify-center py-16 bg-white rounded-xl shadow border border-gray-100">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500 mb-4"></div>
-          <p className="text-gray-600">Chargement des membres...</p>
+              {/* Bouton de soumission */}
+              <div className="md:col-span-2 flex justify-end">
+                <button
+                  type="submit"
+                  className="px-6 py-3 bg-emerald-600 text-white rounded-lg shadow-lg hover:bg-emerald-700 transition-transform transform hover:scale-105"
+                >
+                  {isEditMode ? "Enregistrer les modifications" : "Ajouter le membre"}
+                </button>
+              </div>
+            </form>
+          </motion.div>
         </div>
-      ) : filteredMembers.length === 0 ? (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center py-16 bg-white rounded-xl shadow border border-gray-100"
-        >
-          <FiSearch className="mx-auto text-4xl text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-700 mb-2">Aucun membre trouvé</h3>
-          <p className="text-gray-500">
-            {searchTerm || filterRole !== 'all' || filterProfession !== 'all' 
-              ? "Essayez de modifier vos critères de recherche ou de filtre."
-              : "Aucun membre n'a été enregistré pour le moment."}
-          </p>
-        </motion.div>
+      )}
+
+      {/* Barre de recherche */}
+      <div className="flex justify-center mb-8">
+        <div className="relative w-full max-w-md">
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Rechercher un membre par nom ou contact..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+      </div>
+
+      {/* Affichage des membres filtrés ou des listes séparées */}
+      {searchQuery ? (
+        // Affichage d'une seule liste si une recherche est en cours
+        <div className="mb-10">
+          <h2 className="text-2xl font-bold mb-6 text-emerald-800 border-b-2 pb-2 border-emerald-600 flex items-center">
+            <FiUsers className="mr-2" />
+            Résultats de la recherche
+            <span className="ml-auto text-sm font-normal bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">
+              {filteredMembers.length} membre{filteredMembers.length > 1 ? 's' : ''}
+            </span>
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredMembers.map((member, index) => (
+              <motion.div
+                key={member.id}
+                variants={fadeIn}
+                initial="hidden"
+                animate="visible"
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+              >
+                <MemberCard
+                  member={member}
+                  onDelete={() => handleOpenDeleteModal(member.id)}
+                  userRole={user?.role}
+                  onEdit={handleEdit}
+                />
+              </motion.div>
+            ))}
+          </div>
+        </div>
       ) : (
-        <motion.div 
-          initial="hidden"
-          animate="visible"
-          variants={{
-            visible: {
-              transition: {
-                staggerChildren: 0.1
-              }
-            }
-          }}
-        >
-          {/* Bureau Exécutif */}
+        // Affichage des listes séparées si aucune recherche n'est en cours
+        <>
+          {/* Rôle - Bureau Exécutif */}
           {executiveBureau.length > 0 && (
             <div className="mb-10">
               <h2 className="text-2xl font-bold mb-6 text-emerald-800 border-b-2 pb-2 border-emerald-600 flex items-center">
-                <FiUser className="mr-2" />
+                <FiUsers className="mr-2" />
                 Bureau Exécutif
                 <span className="ml-auto text-sm font-normal bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">
                   {executiveBureau.length} membre{executiveBureau.length > 1 ? 's' : ''}
                 </span>
               </h2>
-              
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {executiveBureau.map((member, index) => (
                   <motion.div
                     key={member.id}
                     variants={fadeIn}
+                    initial="hidden"
+                    animate="visible"
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                   >
-                    <MemberCard 
-                      member={member} 
-                      onDelete={() => handleOpenDeleteModal(member.id)} 
-                      userRole={user?.role} 
-                      onEdit={handleEdit} 
+                    <MemberCard
+                      member={member}
+                      onDelete={() => handleOpenDeleteModal(member.id)}
+                      userRole={user?.role}
+                      onEdit={handleEdit}
                     />
                   </motion.div>
                 ))}
@@ -745,29 +596,30 @@ const Members = () => {
             </div>
           )}
 
-          {/* Comité Adhoc */}
+          {/* Rôle - Comité Adhoc */}
           {adhocCommittee.length > 0 && (
             <div className="mb-10">
               <h2 className="text-2xl font-bold mb-6 text-emerald-800 border-b-2 pb-2 border-emerald-600 flex items-center">
-                <FiUser className="mr-2" />
+                <FiUsers className="mr-2" />
                 Comité Adhoc
                 <span className="ml-auto text-sm font-normal bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">
                   {adhocCommittee.length} membre{adhocCommittee.length > 1 ? 's' : ''}
                 </span>
               </h2>
-              
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {adhocCommittee.map((member, index) => (
                   <motion.div
                     key={member.id}
                     variants={fadeIn}
+                    initial="hidden"
+                    animate="visible"
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                   >
-                    <MemberCard 
-                      member={member} 
-                      onDelete={() => handleOpenDeleteModal(member.id)} 
-                      userRole={user?.role} 
-                      onEdit={handleEdit} 
+                    <MemberCard
+                      member={member}
+                      onDelete={() => handleOpenDeleteModal(member.id)}
+                      userRole={user?.role}
+                      onEdit={handleEdit}
                     />
                   </motion.div>
                 ))}
@@ -775,7 +627,7 @@ const Members = () => {
             </div>
           )}
 
-          {/* Membres */}
+          {/* Rôle - Membres */}
           {regularMembers.length > 0 && (
             <div className="mb-10">
               <h2 className="text-2xl font-bold mb-6 text-emerald-800 border-b-2 pb-2 border-emerald-600 flex items-center">
@@ -785,7 +637,6 @@ const Members = () => {
                   {regularMembers.length} membre{regularMembers.length > 1 ? 's' : ''}
                 </span>
               </h2>
-              
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {regularMembers.map((member, index) => (
                   <motion.div
@@ -793,18 +644,18 @@ const Members = () => {
                     variants={fadeIn}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                   >
-                    <MemberCard 
-                      member={member} 
-                      onDelete={() => handleOpenDeleteModal(member.id)} 
-                      userRole={user?.role} 
-                      onEdit={handleEdit} 
+                    <MemberCard
+                      member={member}
+                      onDelete={() => handleOpenDeleteModal(member.id)}
+                      userRole={user?.role}
+                      onEdit={handleEdit}
                     />
                   </motion.div>
                 ))}
               </div>
             </div>
           )}
-        </motion.div>
+        </>
       )}
     </div>
   );
