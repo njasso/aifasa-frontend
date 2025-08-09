@@ -5,7 +5,7 @@ import MemberCard from '../components/MemberCard';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
 import { motion } from 'framer-motion';
-import { FiUser, FiUsers, FiEdit2, FiPlus, FiSearch, FiPhone, FiUpload, FiMapPin, FiFileText, FiXCircle } from 'react-icons/fi';
+import { FiUser, FiUsers, FiPlus, FiSearch, FiFileText, FiXCircle } from 'react-icons/fi';
 
 // Enregistrement des composants Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
@@ -70,9 +70,6 @@ const Members = () => {
   const [modalMessage, setModalMessage] = useState('');
   const [modalIsError, setModalIsError] = useState(false);
   const [actionToConfirm, setActionToConfirm] = useState(null);
-  const [deleteMemberId, setDeleteMemberId] = useState(null);
-
-  // Nouvel état pour stocker les URLs existantes des fichiers
   const [existingFiles, setExistingFiles] = useState({
     photo_url: null,
     public_id: null,
@@ -80,7 +77,6 @@ const Members = () => {
     cv_public_id: null
   });
 
-  // Fonction pour charger les membres depuis l'API
   const fetchMembers = async () => {
     try {
       const allMembers = await getMembers();
@@ -93,7 +89,6 @@ const Members = () => {
     }
   };
 
-  // Charge les membres au premier rendu du composant
   useEffect(() => {
     fetchMembers();
   }, []);
@@ -123,7 +118,6 @@ const Members = () => {
   };
 
   const handleOpenDeleteModal = (id) => {
-    setDeleteMemberId(id);
     setModalMessage("Êtes-vous sûr de vouloir supprimer ce membre ? Cette action est irréversible.");
     setModalIsError(false);
     setShowModal(true);
@@ -187,12 +181,11 @@ const Members = () => {
       companyOrProject: member.companyOrProject || '',
       activities: member.activities || '',
       role: member.role || '',
-      profilePicture: null, // Réinitialiser le fichier
+      profilePicture: null,
       profilePictureFileName: '',
-      cvFile: null, // Réinitialiser le fichier
+      cvFile: null,
       cvFileName: ''
     });
-    // Stocker les URLs existantes
     setExistingFiles({
       photo_url: member.photo_url || null,
       public_id: member.public_id || null,
@@ -211,7 +204,6 @@ const Members = () => {
           data.append(key, value);
         }
       });
-      // Ajouter les fichiers au FormData
       if (formData.profilePicture) {
         data.append('profilePicture', formData.profilePicture);
       }
@@ -219,18 +211,15 @@ const Members = () => {
         data.append('cv', formData.cvFile);
       }
 
-      // Si le mode édition, ajouter les URLs existantes si aucun nouveau fichier n'est sélectionné
       if (isEditing) {
         if (!formData.profilePicture) {
           data.append('photo_url', existingFiles.photo_url || '');
           data.append('public_id', existingFiles.public_id || '');
         }
-        // Ajouter les URLs du CV existant si aucun nouveau fichier n'est sélectionné
         if (!formData.cvFile) {
           data.append('cv_url', existingFiles.cv_url || '');
           data.append('cv_public_id', existingFiles.cv_public_id || '');
         }
-
         await updateMember(currentMemberId, data);
         setModalMessage("Membre mis à jour avec succès !");
       } else {
@@ -240,7 +229,7 @@ const Members = () => {
 
       setModalIsError(false);
       setShowModal(true);
-      fetchMembers(); // Recharger les membres après l'opération
+      fetchMembers();
       setShowForm(false);
     } catch (error) {
       console.error("Form submission error:", error);
@@ -274,7 +263,6 @@ const Members = () => {
     );
   }, [members, searchQuery]);
 
-  // Autres parties du composant (graphs, rendu du formulaire, etc.)
   const leadershipMembers = filteredMembers.filter(m => m.role === 'leadership');
   const regularMembers = filteredMembers.filter(m => m.role !== 'leadership');
   const isAdmin = user?.role === 'admin';
@@ -283,7 +271,6 @@ const Members = () => {
     visible: { opacity: 1 }
   };
 
-  // Logique du graphique Pie pour le sexe
   const genderData = useMemo(() => {
     const genders = filteredMembers.reduce((acc, member) => {
       acc[member.sex] = (acc[member.sex] || 0) + 1;
@@ -299,7 +286,6 @@ const Members = () => {
     };
   }, [filteredMembers]);
 
-  // Logique du graphique Bar pour la structure d'emploi
   const employmentData = useMemo(() => {
     const employment = filteredMembers.reduce((acc, member) => {
       acc[member.employmentStructure] = (acc[member.employmentStructure] || 0) + 1;
@@ -366,7 +352,6 @@ const Members = () => {
         />
       )}
 
-      {/* Titre et boutons d'action */}
       <motion.div initial="hidden" animate="visible" variants={fadeIn} className="flex justify-between items-center mb-10">
         <h1 className="text-4xl font-extrabold text-emerald-800">Espace Membres</h1>
         {isAdmin && (
@@ -380,7 +365,6 @@ const Members = () => {
         )}
       </motion.div>
 
-      {/* Formulaire d'ajout/édition */}
       {isAdmin && showForm && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -389,7 +373,6 @@ const Members = () => {
         >
           <h2 className="text-3xl font-bold mb-6 text-emerald-700">{isEditing ? 'Modifier un membre' : 'Ajouter un nouveau membre'}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Champs du formulaire */}
             <div>
               <label className="block text-gray-700 font-medium mb-2">Prénom</label>
               <input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500" required />
@@ -444,11 +427,10 @@ const Members = () => {
               <input type="text" name="activities" value={formData.activities} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500" />
             </div>
 
-            {/* Champs de fichiers */}
             <div className="col-span-1 md:col-span-2 flex items-center justify-between space-x-6">
               <div className="flex-1">
                 <label className="block text-gray-700 font-medium mb-2 flex items-center">
-                  <FiUpload className="mr-2" />
+                  <FiPlus className="mr-2" />
                   Photo de profil
                 </label>
                 <input type="file" name="profilePicture" onChange={handleFileChange} className="w-full" />
@@ -468,7 +450,6 @@ const Members = () => {
               </div>
             </div>
 
-            {/* Boutons d'action du formulaire */}
             <div className="col-span-1 md:col-span-2 flex justify-end space-x-4 mt-6">
               <button
                 type="button"
@@ -488,7 +469,6 @@ const Members = () => {
         </motion.div>
       )}
 
-      {/* Barre de recherche et statistiques */}
       <motion.div initial="hidden" animate="visible" variants={fadeIn} className="flex items-center justify-between mb-8">
         <div className="flex items-center w-full max-w-md bg-white rounded-full shadow-inner overflow-hidden border border-gray-200">
           <FiSearch className="text-gray-400 ml-4 mr-2" />
@@ -502,7 +482,6 @@ const Members = () => {
         </div>
       </motion.div>
 
-      {/* Graphiques */}
       <motion.div initial="hidden" animate="visible" variants={fadeIn} className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
         <div className="bg-white p-6 rounded-xl shadow-xl">
           <Pie data={genderData} options={genderOptions} />
@@ -512,7 +491,6 @@ const Members = () => {
         </div>
       </motion.div>
       
-      {/* Leadership */}
       {leadershipMembers.length > 0 && (
         <div className="mb-10">
           <h2 className="text-2xl font-bold mb-6 text-emerald-800 border-b-2 pb-2 border-emerald-600 flex items-center">
@@ -541,7 +519,6 @@ const Members = () => {
         </div>
       )}
 
-      {/* Membres */}
       {regularMembers.length > 0 && (
         <div className="mb-10">
           <h2 className="text-2xl font-bold mb-6 text-emerald-800 border-b-2 pb-2 border-emerald-600 flex items-center">
