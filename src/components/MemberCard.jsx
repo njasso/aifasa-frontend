@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { deleteMember } from '../services/memberService';
+import { motion } from 'framer-motion';
+import { User, Phone, MapPin, Briefcase, Mail, Home, Users, BookOpen } from 'lucide-react'; // Importation d'icônes modernes
 
 // Composant Modal pour remplacer les alertes natives
 const Modal = ({ message, onConfirm, onCancel }) => {
@@ -85,8 +87,19 @@ const MemberCard = ({ member, onDelete, userRole, onEdit }) => {
   const neutralDark = 'text-gray-800';
   const neutralBorder = 'border-gray-200';
 
+  // Variants pour l'animation de Framer Motion
+  const cardVariants = {
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: "easeOut" } },
+  };
+
   return (
-    <div className={`bg-white shadow-lg rounded-xl p-6 flex flex-col items-center text-center border ${neutralBorder} hover:shadow-xl transition-shadow duration-300`}>
+    <motion.div
+      className="bg-white shadow-lg rounded-xl p-6 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left border border-gray-200 hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1"
+      variants={cardVariants}
+      initial="hidden"
+      animate="visible"
+    >
       {isModalOpen && (
         <Modal
           message={`Êtes-vous sûr de vouloir supprimer ${member.first_name} ${member.last_name} ?`}
@@ -95,82 +108,100 @@ const MemberCard = ({ member, onDelete, userRole, onEdit }) => {
         />
       )}
 
-      <img
-        src={member.photo_url || DEFAULT_PROFILE_PIC}
-        alt={`${member.first_name} ${member.last_name}`}
-        className="w-28 h-28 object-cover rounded-full mb-4 border-4 border-emerald-400 shadow-md"
-        onError={(e) => { e.target.onerror = null; e.target.src = DEFAULT_PROFILE_PIC; }}
-      />
-      <h3 className={`text-xl font-bold ${primaryGreen} mb-2`}>{member.last_name} {member.first_name}</h3>
-      <p className={`text-md font-semibold ${neutralDark} mb-1`}>
-        Rôle: <span className="font-normal text-gray-700">{member.role || 'N/A'}</span>
-      </p>
-      <p className="text-gray-700 text-sm mb-1">
-        Profession: <span className="font-normal">{member.profession || 'N/A'}</span>
-      </p>
-      <p className="text-gray-600 text-sm mb-1">
-        Sexe: <span className="font-normal">{member.sex || 'N/A'}</span>
-      </p>
-      <p className="text-gray-600 text-sm mb-1">
-        Localisation: <span className="font-normal">{member.location || 'N/A'}</span>
-      </p>
-      <p className="text-gray-600 text-sm mb-1">
-        Adresse: <span className="font-normal">{member.address || 'N/A'}</span>
-      </p>
-      <p className="text-gray-600 text-sm mb-1">
-        Contact: <span className="font-normal">{member.contact || 'N/A'}</span>
-      </p>
-      <p className="text-gray-600 text-sm mb-1">
-        Structure d'emploi: <span className="font-normal">{member.employment_structure || 'N/A'}</span>
-      </p>
-      <p className="text-gray-600 text-sm mb-2">
-        Entreprise/Projet: <span className="font-normal">{member.company_or_project || 'N/A'}</span>
-      </p>
-      <p className="text-gray-500 text-xs italic">
-        {member.activities ? `Activités: ${member.activities}` : ''}
-      </p>
-
-      {/* Liens pour le CV */}
-      {member.cv_url && (
-        <div className="flex flex-col sm:flex-row gap-2 mt-4 w-full">
-          <a
-            href={member.cv_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            download={suggestedFileName}
-            className="flex-1 bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors duration-300 text-center"
-          >
-            Télécharger le CV
-          </a>
-          <a
-            href={member.cv_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors duration-300 text-center"
-          >
-            Voir le CV
-          </a>
+      {/* Section de gauche: Photo et nom */}
+      <div className="flex flex-col items-center sm:items-start sm:mr-6 mb-4 sm:mb-0">
+        <img
+          src={member.photo_url || DEFAULT_PROFILE_PIC}
+          alt={`${member.first_name} ${member.last_name}`}
+          className="w-28 h-28 object-cover rounded-full mb-4 border-4 border-emerald-400 shadow-md"
+          onError={(e) => { e.target.onerror = null; e.target.src = DEFAULT_PROFILE_PIC; }}
+        />
+        <h3 className={`text-xl font-bold ${primaryGreen} mb-1`}>{member.last_name} {member.first_name}</h3>
+        <div className="flex items-center text-md font-semibold text-gray-700">
+          <User size={16} className="mr-2 text-emerald-500" />
+          <span>{member.role || 'N/A'}</span>
         </div>
-      )}
+      </div>
 
-      {/* Boutons d'action (visible uniquement pour l'admin) */}
-      {isAdmin && (
-        <div className="mt-4 flex gap-2">
-          <button
-            onClick={handleEditClick}
-            className="px-4 py-2 text-sm rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 transition-colors"
-          >
-            Éditer
-          </button>
-          <button
-            onClick={handleDeleteClick}
-            className="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
-          >
-            Supprimer
-          </button>
+      {/* Section de droite: Détails du membre */}
+      <div className="flex-1 w-full sm:w-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm text-gray-700 mb-4">
+          {/* Rangée 1 */}
+          <p className="flex items-center">
+            <Briefcase size={16} className="mr-2 text-gray-500" />
+            Profession: <span className="font-normal ml-1 text-gray-800">{member.profession || 'N/A'}</span>
+          </p>
+          <p className="flex items-center">
+            <Phone size={16} className="mr-2 text-gray-500" />
+            Contact: <span className="font-normal ml-1 text-gray-800">{member.contact || 'N/A'}</span>
+          </p>
+          {/* Rangée 2 */}
+          <p className="flex items-center">
+            <MapPin size={16} className="mr-2 text-gray-500" />
+            Localisation: <span className="font-normal ml-1 text-gray-800">{member.location || 'N/A'}</span>
+          </p>
+          <p className="flex items-center">
+            <Home size={16} className="mr-2 text-gray-500" />
+            Adresse: <span className="font-normal ml-1 text-gray-800">{member.address || 'N/A'}</span>
+          </p>
+          {/* Rangée 3 */}
+          <p className="flex items-center">
+            <Users size={16} className="mr-2 text-gray-500" />
+            Emploi: <span className="font-normal ml-1 text-gray-800">{member.employment_structure || 'N/A'}</span>
+          </p>
+          <p className="flex items-center">
+            <BookOpen size={16} className="mr-2 text-gray-500" />
+            Activités: <span className="font-normal ml-1 text-gray-800">{member.activities || 'N/A'}</span>
+          </p>
+          {/* Rangée 4 */}
+          <p className="flex items-center col-span-1 md:col-span-2">
+            <Mail size={16} className="mr-2 text-gray-500" />
+            Entreprise/Projet: <span className="font-normal ml-1 text-gray-800">{member.company_or_project || 'N/A'}</span>
+          </p>
         </div>
-      )}
-    </div>
+
+        {/* Liens pour le CV */}
+        {member.cv_url && (
+          <div className="flex flex-col sm:flex-row gap-2 mt-4 w-full">
+            <a
+              href={member.cv_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              download={suggestedFileName}
+              className="flex-1 bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors duration-300 text-center shadow-md"
+            >
+              Télécharger le CV
+            </a>
+            <a
+              href={member.cv_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors duration-300 text-center shadow-md"
+            >
+              Voir le CV
+            </a>
+          </div>
+        )}
+
+        {/* Boutons d'action (visible uniquement pour l'admin) */}
+        {isAdmin && (
+          <div className="mt-4 flex gap-2 w-full justify-center sm:justify-start">
+            <button
+              onClick={handleEditClick}
+              className="px-4 py-2 text-sm rounded-lg bg-yellow-500 text-white font-medium hover:bg-yellow-600 transition-colors shadow-md transform hover:scale-105"
+            >
+              Éditer
+            </button>
+            <button
+              onClick={handleDeleteClick}
+              className="px-4 py-2 text-sm rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition-colors shadow-md transform hover:scale-105"
+            >
+              Supprimer
+            </button>
+          </div>
+        )}
+      </div>
+    </motion.div>
   );
 };
 
