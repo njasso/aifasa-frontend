@@ -4,7 +4,7 @@ import { getMembers, createMember, updateMember, deleteMember } from '../service
 import MemberCard from '../components/MemberCard';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { motion } from 'framer-motion';
-import { FiUser, FiUsers, FiPlus, FiSearch, FiUpload, FiXCircle } from 'react-icons/fi';
+import { FiUser, FiUsers, FiPlus, FiSearch, FiUpload, FiXCircle, Pie, Bar } from 'react-icons/fi';
 
 // Enregistrement des composants Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
