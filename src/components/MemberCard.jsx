@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FiEdit2, FiTrash2, FiFileText, FiMapPin, FiPhone, FiUser } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiFileText, FiMapPin, FiPhone, FiUser, FiBriefcase, FiLayers, FiCheckCircle } from 'react-icons/fi';
 
 const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
   // Utilisation de la propriété 'photo_url' et d'un fallback pour la photo de profil
@@ -34,7 +34,7 @@ const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
       <div className="relative">
         <img
           src={profilePictureUrl}
-          alt={`${member.first_name} ${member.last_name}`} // Corrected alt text
+          alt={`${member.first_name} ${member.last_name}`}
           className="w-full h-48 object-cover object-center"
           onError={(e) => {
             e.target.onerror = null;
@@ -58,6 +58,12 @@ const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
               {member.location}
             </p>
           )}
+          {member.address && (
+            <p className="flex items-center">
+              <FiMapPin className="mr-2 text-emerald-500 flex-shrink-0" />
+              {member.address}
+            </p>
+          )}
           {member.contact && (
             <p className="flex items-center">
               <FiPhone className="mr-2 text-emerald-500 flex-shrink-0" />
@@ -68,6 +74,24 @@ const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
             <p className="flex items-center">
               <FiUser className="mr-2 text-emerald-500 flex-shrink-0" />
               {member.sex}
+            </p>
+          )}
+          {member.employment_structure && (
+            <p className="flex items-center">
+              <FiBriefcase className="mr-2 text-emerald-500 flex-shrink-0" />
+              {member.employment_structure}
+            </p>
+          )}
+          {member.company_or_project && (
+            <p className="flex items-center">
+              <FiLayers className="mr-2 text-emerald-500 flex-shrink-0" />
+              {member.company_or_project}
+            </p>
+          )}
+          {member.activities && (
+            <p className="flex items-center">
+              <FiCheckCircle className="mr-2 text-emerald-500 flex-shrink-0" />
+              {member.activities}
             </p>
           )}
         </div>
