@@ -203,7 +203,7 @@ const Members = () => {
         data.append('profilePicture', formData.profilePicture);
       }
       if (formData.cvFile) {
-        data.append('cvFile', formData.cvFile);
+        data.append('cv', formData.cvFile);
       }
       if (editingId) {
         const updatedMember = await updateMember(editingId, data);
