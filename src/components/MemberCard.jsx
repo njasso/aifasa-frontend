@@ -1,10 +1,22 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FiEdit2, FiTrash2, FiFileText, FiMapPin, FiPhone, FiUser, FiBriefcase, FiLayers, FiCheckCircle } from 'react-icons/fi';
+import {
+  FiEdit2,
+  FiTrash2,
+  FiFileText,
+  FiMapPin,
+  FiPhone,
+  FiUser,
+  FiBriefcase,
+  FiLayers,
+  FiCheckCircle,
+} from 'react-icons/fi';
 
 const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
   // Utilisation de la propriété 'photo_url' et d'un fallback pour la photo de profil
-  const profilePictureUrl = member.photo_url || `https://ui-avatars.com/api/?name=${member.first_name}+${member.last_name}&background=10b981&color=fff&bold=true`;
+  const profilePictureUrl =
+    member.photo_url ||
+    `https://ui-avatars.com/api/?name=${member.first_name}+${member.last_name}&background=10b981&color=fff&bold=true`;
   const isAdmin = userRole === 'admin';
 
   // Fonction pour extraire le nom de fichier suggéré pour le CV
@@ -95,6 +107,20 @@ const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
             </p>
           )}
         </div>
+
+        {/* Aperçu PDF CV */}
+        {member.cv_url && (
+          <div className="mt-4 border rounded p-2 bg-gray-50">
+            <h4 className="text-sm font-semibold mb-1 text-gray-700">Aperçu du CV :</h4>
+            <iframe
+              src={member.cv_url}
+              title={`${member.first_name} ${member.last_name} - CV`}
+              width="100%"
+              height="300"
+              className="rounded"
+            />
+          </div>
+        )}
 
         {/* Section des boutons d'action */}
         {isAdmin && (
