@@ -24,7 +24,6 @@ const Members = () => {
   const [filterProfession, setFilterProfession] = useState('');
   const [filterGender, setFilterGender] = useState('');
   const [loading, setLoading] = useState(false);
-  const [memberToDeleteId, setMemberToDeleteId] = useState(null);
   const [memberToDeleteName, setMemberToDeleteName] = useState('');
 
   useEffect(() => {
