@@ -93,7 +93,7 @@ const fadeIn = {
 const Members = () => {
   // Contexte d'authentification pour obtenir les informations de l'utilisateur
   const { user } = useAuth();
-  
+
   // États locaux
   const [members, setMembers] = useState([]);
   const [formData, setFormData] = useState({
@@ -142,14 +142,12 @@ const Members = () => {
     loadMembers();
   }, []);
 
-  // Utilisation de useMemo pour séparer les admins et les membres réguliers
-  // Cela évite de refaire le calcul à chaque rendu si les membres n'ont pas changé.
+  // Utilisation de useMemo pour séparer les membres par rôle
   const { executiveBureau, adhocCommittee, regularMembers } = useMemo(() => {
-    const admins = members.filter(member => member.role === 'admin');
     const executiveBureau = members.filter(member => member.role === 'Bureau Exécutif');
     const adhocCommittee = members.filter(member => member.role === 'Comité Adhoc');
     const regularMembers = members.filter(member => member.role === 'Membre');
-    return { admins, executiveBureau, adhocCommittee, regularMembers };
+    return { executiveBureau, adhocCommittee, regularMembers };
   }, [members]);
 
   // Utilisation de useMemo pour filtrer les membres
