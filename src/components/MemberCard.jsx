@@ -10,6 +10,7 @@ import {
   FiBriefcase,
   FiLayers,
   FiCheckCircle,
+  FiDownload,
 } from 'react-icons/fi';
 
 const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
@@ -22,18 +23,26 @@ const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
   // Fonction pour extraire le nom de fichier suggéré pour le CV
   const getSuggestedCvFileName = (url, memberName) => {
     try {
-      const parts = url.split('.');
-      const extension = parts.length > 1 ? parts.pop() : 'pdf';
-      const safeName = memberName.replace(/[^a-z0-9]/gi, '_');
-      return `cv_${safeName}.${extension}`;
+      // Si l'URL contient déjà un nom de fichier valide
+      if (url.includes('/')) {
+        const filename = url.split('/').pop();
+        if (filename.includes('.')) return filename;
+      }
+      
+      // Sinon générer un nom basé sur le membre
+      const safeName = memberName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      return `cv_${safeName}.pdf`;
     } catch (e) {
-      return `cv_${memberName.replace(/[^a-z0-9]/gi, '_')}.pdf`;
+      return `cv_${memberName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
     }
   };
 
   const suggestedFileName = member.cv_url
     ? getSuggestedCvFileName(member.cv_url, `${member.first_name}_${member.last_name}`)
     : '';
+
+  // Vérifie si le CV est un PDF (pour déterminer s'il peut être affiché en iframe)
+  const isPdf = member.cv_url?.toLowerCase().endsWith('.pdf');
 
   return (
     <motion.div
@@ -108,36 +117,49 @@ const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
           )}
         </div>
 
-        {/* Aperçu PDF CV */}
+        {/* Section CV */}
         {member.cv_url && (
           <div className="mt-4 border rounded p-2 bg-gray-50">
-            <h4 className="text-sm font-semibold mb-1 text-gray-700">Aperçu du CV :</h4>
-            <iframe
-              src={member.cv_url}
-              title={`${member.first_name} ${member.last_name} - CV`}
-              width="100%"
-              height="300"
-              className="rounded"
-            />
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-semibold text-gray-700 flex items-center">
+                <FiFileText className="mr-2" />
+                Curriculum Vitae
+              </h4>
+              <a
+                href={member.cv_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                download={suggestedFileName}
+                className="text-sm text-emerald-600 hover:underline flex items-center"
+                title="Télécharger le CV"
+              >
+                <FiDownload className="mr-1" />
+                Télécharger
+              </a>
+            </div>
+            
+            {isPdf ? (
+              <iframe
+                src={member.cv_url}
+                title={`CV de ${member.first_name} ${member.last_name}`}
+                width="100%"
+                height="300"
+                className="rounded border"
+                style={{ backgroundColor: '#f9fafb' }}
+              />
+            ) : (
+              <div className="text-center py-4 text-sm text-gray-500">
+                <FiFileText className="mx-auto text-2xl mb-2" />
+                <p>Aperçu non disponible</p>
+                <p className="text-xs mt-1">Le format du CV ne permet pas l'affichage direct</p>
+              </div>
+            )}
           </div>
         )}
 
         {/* Section des boutons d'action */}
         {isAdmin && (
           <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-end space-x-2">
-            {/* Bouton pour télécharger le CV, visible uniquement si le CV existe */}
-            {member.cv_url && (
-              <a
-                href={member.cv_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                download={suggestedFileName}
-                className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition-colors"
-                title="Télécharger le CV"
-              >
-                <FiFileText />
-              </a>
-            )}
             {/* Bouton d'édition */}
             <button
               onClick={() => onEdit(member)}
