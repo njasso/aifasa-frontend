@@ -5,7 +5,7 @@ import MemberCard from '../components/MemberCard';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
 import { motion } from 'framer-motion';
-import { FiUser, FiUsers, FiEdit2, FiPlus, FiSearch, FiPhone, FiUpload, FiMapPin, FiFileText, FiXCircle, FiDownload } from 'react-icons/fi';
+import { FiUser, FiUsers, FiEdit2, FiPlus, FiSearch, FiUpload, FiFileText, FiXCircle } from 'react-icons/fi';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
@@ -78,7 +78,6 @@ const Members = () => {
   const [memberToDeleteId, setMemberToDeleteId] = useState(null);
 
   const rolesOptions = ['Bureau Exécutif', 'Comité Adhoc', 'Membre'];
-  const sexOptions = ['Homme', 'Femme'];
   const professionOptions = [
     'Ingénieur Agronome',
     'Ingénieur des Eaux et Forêts',
