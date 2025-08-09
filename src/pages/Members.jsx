@@ -92,8 +92,10 @@ const Members = () => {
       if (data.profilePicture && data.profilePicture.length > 0) {
         formData.append('profilePicture', data.profilePicture[0], data.profilePicture[0].name);
       }
+      
+      // FIX: Changed 'cvFile' to 'cv' to match your backend's Multer configuration
       if (data.cvFile && data.cvFile.length > 0) {
-        formData.append('cvFile', data.cvFile[0], data.cvFile[0].name);
+        formData.append('cv', data.cvFile[0], data.cvFile[0].name);
       }
 
       if (editingMember) {
