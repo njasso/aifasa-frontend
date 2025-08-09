@@ -201,16 +201,25 @@ const Members = () => {
     
     try {
       const data = new FormData();
-      for (const key in formData) {
-        if (formData[key] !== null && formData[key] !== '') {
-          if (key === 'profilePicture' && formData[key]) {
-            data.append('profile_picture', formData[key]);
-          } else if (key === 'cvFile' && formData[key]) {
-            data.append('cv_file', formData[key]);
-          } else if (key !== 'profilePictureFileName' && key !== 'cvFileName') {
-            data.append(key, formData[key]);
-          }
-        }
+      // Ajout des champs de texte
+      data.append('firstName', formData.firstName);
+      data.append('lastName', formData.lastName);
+      data.append('sex', formData.sex);
+      data.append('location', formData.location);
+      data.append('address', formData.address);
+      data.append('contact', formData.contact);
+      data.append('profession', formData.profession);
+      data.append('employmentStructure', formData.employmentStructure);
+      data.append('companyOrProject', formData.companyOrProject);
+      data.append('activities', formData.activities);
+      data.append('role', formData.role);
+
+      // Ajout des fichiers, en utilisant les noms de champ corrects
+      if (formData.profilePicture) {
+        data.append('profilePicture', formData.profilePicture);
+      }
+      if (formData.cvFile) {
+        data.append('cvFile', formData.cvFile);
       }
 
       if (editingId) {
@@ -325,7 +334,11 @@ const Members = () => {
       const matchesSearch = fullName.includes(searchTerm.toLowerCase()) ||
                           (member.profession || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (member.location || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (member.contact || '').toLowerCase().includes(searchTerm.toLowerCase());
+                          (member.contact || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (member.address || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (member.employment_structure || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (member.company_or_project || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (member.activities || '').toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesRole = filterRole === 'all' || (member.role || '').toLowerCase() === filterRole.toLowerCase();
       const matchesProfession = filterProfession === 'all' || (member.profession || '').toLowerCase() === filterProfession.toLowerCase();
