@@ -3,9 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { getMembers, createMember, updateMember, deleteMember } from '../services/memberService';
 import MemberCard from '../components/MemberCard';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
-import { Pie, Bar } from 'react-chartjs-2';
 import { motion } from 'framer-motion';
-import { FiUser, FiUsers, FiEdit2, FiPlus, FiSearch, FiUpload, FiXCircle } from 'react-icons/fi';
+import { FiUser, FiUsers, FiPlus, FiSearch, FiUpload, FiXCircle } from 'react-icons/fi';
 
 // Enregistrement des composants Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
@@ -109,6 +108,18 @@ const Members = () => {
     return { admins, regularMembers };
   }, [members]);
 
+  // Utilisation de useMemo pour filtrer les membres
+  const filteredMembers = useMemo(() => {
+    const allMembers = [...admins, ...regularMembers];
+    if (!searchQuery) return allMembers;
+    const lowerCaseQuery = searchQuery.toLowerCase();
+    return allMembers.filter(member =>
+      (member.firstName && member.firstName.toLowerCase().includes(lowerCaseQuery)) ||
+      (member.lastName && member.lastName.toLowerCase().includes(lowerCaseQuery)) ||
+      (member.contact && member.contact.toLowerCase().includes(lowerCaseQuery))
+    );
+  }, [searchQuery, admins, regularMembers]);
+
   // Fonctions de gestion de formulaire
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -130,12 +141,29 @@ const Members = () => {
   // Fonction de soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Construction de l'objet FormData pour envoyer les données et les fichiers
+    const dataToSend = new FormData();
+    for (const key in formData) {
+      // Les clés de fichiers sont traitées séparément
+      if (key !== 'profilePicture' && key !== 'cvFile') {
+        dataToSend.append(key, formData[key]);
+      }
+    }
+    // Ajout des fichiers s'ils existent
+    if (formData.profilePicture) {
+        dataToSend.append('profilePicture', formData.profilePicture);
+    }
+    if (formData.cvFile) {
+        dataToSend.append('cvFile', formData.cvFile);
+    }
+
     try {
       if (isEditMode) {
-        await updateMember(currentMemberId, formData);
+        await updateMember(currentMemberId, dataToSend);
         console.log("Membre mis à jour avec succès!");
       } else {
-        await createMember(formData);
+        await createMember(dataToSend);
         console.log("Membre ajouté avec succès!");
       }
       resetForm();
@@ -204,17 +232,6 @@ const Members = () => {
     setCurrentMemberId(null);
   };
 
-  // Utilisation de useMemo pour filtrer les membres
-  const filteredMembers = useMemo(() => {
-    const allMembers = [...admins, ...regularMembers];
-    if (!searchQuery) return allMembers;
-    const lowerCaseQuery = searchQuery.toLowerCase();
-    return allMembers.filter(member =>
-      (member.firstName && member.firstName.toLowerCase().includes(lowerCaseQuery)) ||
-      (member.lastName && member.lastName.toLowerCase().includes(lowerCaseQuery)) ||
-      (member.contact && member.contact.toLowerCase().includes(lowerCaseQuery))
-    );
-  }, [searchQuery, admins, regularMembers]);
 
   // Rendu de la page
   if (loading) return <p className="text-center text-xl mt-10">Chargement des membres...</p>;
@@ -463,57 +480,24 @@ const Members = () => {
         </div>
       </div>
 
-      {/* Statistiques et graphiques (à compléter si nécessaire) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-        {/* ... (graphiques existants ou à ajouter) ... */}
-      </div>
-
-      {/* Rôle - Administrateurs */}
-      {admins.length > 0 && (
+      {/* Affichage des membres filtrés ou des listes séparées */}
+      {searchQuery ? (
+        // Affichage d'une seule liste si une recherche est en cours
         <div className="mb-10">
           <h2 className="text-2xl font-bold mb-6 text-emerald-800 border-b-2 pb-2 border-emerald-600 flex items-center">
             <FiUsers className="mr-2" />
-            Administrateurs
+            Résultats de la recherche
             <span className="ml-auto text-sm font-normal bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">
-              {admins.length} admin{admins.length > 1 ? 's' : ''}
+              {filteredMembers.length} membre{filteredMembers.length > 1 ? 's' : ''}
             </span>
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {admins.map((admin, index) => (
-              <motion.div
-                key={admin.id}
-                variants={fadeIn}
-                initial="hidden"
-                animate="visible"
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-              >
-                <MemberCard
-                  member={admin}
-                  onDelete={() => handleOpenDeleteModal(admin.id)}
-                  userRole={user?.role}
-                  onEdit={handleEdit}
-                />
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Rôle - Membres */}
-      {regularMembers.length > 0 && (
-        <div className="mb-10">
-          <h2 className="text-2xl font-bold mb-6 text-emerald-800 border-b-2 pb-2 border-emerald-600 flex items-center">
-            <FiUser className="mr-2" />
-            Membres
-            <span className="ml-auto text-sm font-normal bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">
-              {regularMembers.length} membre{regularMembers.length > 1 ? 's' : ''}
-            </span>
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {regularMembers.map((member, index) => (
+            {filteredMembers.map((member, index) => (
               <motion.div
                 key={member.id}
                 variants={fadeIn}
+                initial="hidden"
+                animate="visible"
                 transition={{ duration: 0.3, delay: index * 0.05 }}
               >
                 <MemberCard
@@ -526,8 +510,70 @@ const Members = () => {
             ))}
           </div>
         </div>
-      )}
+      ) : (
+        // Affichage des listes séparées si aucune recherche n'est en cours
+        <>
+          {/* Rôle - Administrateurs */}
+          {admins.length > 0 && (
+            <div className="mb-10">
+              <h2 className="text-2xl font-bold mb-6 text-emerald-800 border-b-2 pb-2 border-emerald-600 flex items-center">
+                <FiUsers className="mr-2" />
+                Administrateurs
+                <span className="ml-auto text-sm font-normal bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">
+                  {admins.length} admin{admins.length > 1 ? 's' : ''}
+                </span>
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {admins.map((admin, index) => (
+                  <motion.div
+                    key={admin.id}
+                    variants={fadeIn}
+                    initial="hidden"
+                    animate="visible"
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                  >
+                    <MemberCard
+                      member={admin}
+                      onDelete={() => handleOpenDeleteModal(admin.id)}
+                      userRole={user?.role}
+                      onEdit={handleEdit}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
 
+          {/* Rôle - Membres */}
+          {regularMembers.length > 0 && (
+            <div className="mb-10">
+              <h2 className="text-2xl font-bold mb-6 text-emerald-800 border-b-2 pb-2 border-emerald-600 flex items-center">
+                <FiUser className="mr-2" />
+                Membres
+                <span className="ml-auto text-sm font-normal bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">
+                  {regularMembers.length} membre{regularMembers.length > 1 ? 's' : ''}
+                </span>
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {regularMembers.map((member, index) => (
+                  <motion.div
+                    key={member.id}
+                    variants={fadeIn}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                  >
+                    <MemberCard
+                      member={member}
+                      onDelete={() => handleOpenDeleteModal(member.id)}
+                      userRole={user?.role}
+                      onEdit={handleEdit}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };
