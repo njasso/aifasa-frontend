@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { FiUser, FiUsers, FiPlus, FiSearch, FiUpload, FiXCircle, FiPhone, FiMapPin, FiFileText } from 'react-icons/fi';
+import { FiUser, FiUsers, FiPlus, FiSearch, FiUpload, FiXCircle } from 'react-icons/fi';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
-import { Pie, Bar } from 'react-chartjs-2';
 
 // Enregistrement des composants Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
@@ -145,7 +144,7 @@ const Members = () => {
 
   // Utilisation de useMemo pour séparer les admins et les membres réguliers
   // Cela évite de refaire le calcul à chaque rendu si les membres n'ont pas changé.
-  const { admins, executiveBureau, adhocCommittee, regularMembers } = useMemo(() => {
+  const { executiveBureau, adhocCommittee, regularMembers } = useMemo(() => {
     const admins = members.filter(member => member.role === 'admin');
     const executiveBureau = members.filter(member => member.role === 'Bureau Exécutif');
     const adhocCommittee = members.filter(member => member.role === 'Comité Adhoc');
