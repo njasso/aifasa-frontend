@@ -34,7 +34,7 @@ const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
       <div className="relative">
         <img
           src={profilePictureUrl}
-          alt={`Photo de profil de ${member.first_name} ${member.last_name}`}
+          alt={`${member.first_name} ${member.last_name}`} // Corrected alt text
           className="w-full h-48 object-cover object-center"
           onError={(e) => {
             e.target.onerror = null;
