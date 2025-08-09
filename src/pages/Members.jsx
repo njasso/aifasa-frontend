@@ -102,9 +102,9 @@ const Members = () => {
         if (formData[key] !== null && formData[key] !== '') {
           // Special handling for files
           if (key === 'profilePicture' && formData[key]) {
-            data.append('profile_picture', formData[key]);
+            data.append('profilePicture', formData[key]); // CORRECTED: Use 'profilePicture'
           } else if (key === 'cvFile' && formData[key]) {
-            data.append('cv_file', formData[key]);
+            data.append('cv', formData[key]); // CORRECTED: Use 'cv'
           } else if (key !== 'profilePictureFileName' && key !== 'cvFileName') {
             data.append(key, formData[key]);
           }
