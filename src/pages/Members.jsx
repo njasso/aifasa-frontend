@@ -5,41 +5,65 @@ import MemberCard from '../components/MemberCard';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
 import { motion } from 'framer-motion';
-import { FiUser, FiUsers, FiEdit2, FiPlus, FiSearch, FiPhone, FiUpload, FiMapPin, FiFileText } from 'react-icons/fi';
-import { useForm } from 'react-hook-form'; // Added for form validation and handling
+import { FiUser, FiUsers, FiEdit2, FiPlus, FiSearch, FiPhone, FiUpload, FiMapPin, FiFileText, FiXCircle } from 'react-icons/fi';
+import { useForm } from 'react-hook-form'; // Ajouté pour la gestion des formulaires
 
 // Enregistrement des composants Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
-// Custom Modal component for error/success messages (replaces alert/confirm)
-const CustomModal = ({ message, onClose }) => {
-  if (!message) return null;
+// Composant Modal pour remplacer les alertes natives
+const Modal = ({ message, onConfirm, onCancel, showConfirm = true, showCancel = true, isError = false }) => {
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-      <div className="p-8 bg-white rounded-lg shadow-xl text-center max-w-sm mx-auto">
-        <p className="text-lg font-semibold mb-4">{message}</p>
-        <button
-          onClick={onClose}
-          className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition duration-300"
-        >
-          Fermer
-        </button>
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50 p-4">
+      <div className="bg-white p-6 rounded-lg shadow-xl text-center max-w-sm mx-auto">
+        {isError && (
+          <FiXCircle className="mx-auto text-red-500 text-4xl mb-4" />
+        )}
+        <p className="text-lg font-semibold mb-4 text-gray-800">{message}</p>
+        <div className="flex gap-4 justify-center">
+          {showConfirm && (
+            <button
+              onClick={onConfirm}
+              className={`px-4 py-2 ${isError ? 'bg-red-500 hover:bg-red-600' : 'bg-emerald-500 hover:bg-emerald-600'} text-white rounded-lg transition-colors`}
+            >
+              {isError ? 'Fermer' : 'Confirmer'}
+            </button>
+          )}
+          {showCancel && (
+            <button
+              onClick={onCancel}
+              className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors"
+            >
+              Annuler
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-
 const Members = () => {
   const { user } = useAuth();
   const [members, setMembers] = useState([]);
-  const [editingMember, setEditingMember] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [filterRole, setFilterRole] = useState('all');
+  const [filterProfession, setFilterProfession] = useState('all');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState('');
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    message: '',
+    onConfirm: null,
+    onCancel: null,
+    showConfirm: true,
+    showCancel: true,
+    isError: false,
+  });
+  const [memberToDeleteId, setMemberToDeleteId] = useState(null);
 
+  // Utilisation de useForm pour la gestion du formulaire
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
     defaultValues: {
       firstName: '',
@@ -55,410 +79,576 @@ const Members = () => {
       role: '',
       profilePicture: null,
       cvFile: null,
-    },
+      is_new_member: false,
+      last_annual_inscription_date: '',
+      has_paid_adhesion: false,
+      social_contribution_status: {},
+      tontine_status: {},
+      ag_absence_count: 0
+    }
   });
 
-  const fetchMembers = async () => {
-    try {
-      setIsLoading(true);
-      const data = await getMembers();
-      setMembers(data);
-    } catch (error) {
-      console.error('Failed to fetch members:', error);
-      setMessage("Erreur lors du chargement des membres.");
-    } finally {
-      setIsLoading(false);
-    }
+  // Options pour les menus déroulants
+  const rolesOptions = ['Bureau Exécutif', 'Comité Adhoc', 'Membre'];
+  const sexOptions = ['Homme', 'Femme'];
+  const professionOptions = [
+    'Ingénieur Agronome',
+    'Ingénieur des Eaux et Forêts',
+    'Ingénieur Génie Rural',
+    'Ingénieur Économie Agricole',
+    'Ingénieur Halieute',
+    'Autre'
+  ];
+
+  // Animation variants
+  const fadeIn = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
   };
 
   useEffect(() => {
+    const fetchMembers = async () => {
+      setLoading(true);
+      try {
+        const data = await getMembers();
+        setMembers(data);
+      } catch (error) {
+        console.error('Erreur lors du chargement des membres:', error);
+        setModalState({
+          isOpen: true,
+          message: 'Erreur lors du chargement des membres.',
+          onConfirm: () => setModalState({ isOpen: false }),
+          onCancel: null,
+          showCancel: false,
+          isError: true,
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchMembers();
   }, []);
 
+  const handleOpenDeleteModal = (id) => {
+    const memberName = members.find(m => m.id === id)?.first_name + ' ' + members.find(m => m.id === id)?.last_name;
+    setMemberToDeleteId(id);
+    setModalState({
+      isOpen: true,
+      message: `Êtes-vous sûr de vouloir supprimer ${memberName} ? Cette action est irréversible.`,
+      onConfirm: confirmDelete,
+      onCancel: () => setModalState({ isOpen: false }),
+      showConfirm: true,
+      showCancel: true,
+      isError: false,
+    });
+  };
+
+  const confirmDelete = async () => {
+    if (!memberToDeleteId) return;
+    setModalState({ ...modalState, isOpen: false });
+    
+    try {
+      await deleteMember(memberToDeleteId);
+      setMembers(members.filter(m => m.id !== memberToDeleteId));
+      setModalState({
+        isOpen: true,
+        message: 'Membre supprimé avec succès !',
+        onConfirm: () => setModalState({ isOpen: false }),
+        onCancel: null,
+        showCancel: false,
+        isError: false,
+      });
+    } catch (error) {
+      console.error('Erreur lors de la suppression du membre:', error);
+      setModalState({
+        isOpen: true,
+        message: 'Échec de la suppression du membre. Veuillez vérifier la console.',
+        onConfirm: () => setModalState({ isOpen: false }),
+        onCancel: null,
+        showCancel: false,
+        isError: true,
+      });
+    } finally {
+      setMemberToDeleteId(null);
+    }
+  };
+
   const onSubmit = async (data) => {
     setIsSubmitting(true);
-    try {
-      // Create a FormData object to handle files and other fields
-      const formData = new FormData();
-
-      // Append all text fields
-      Object.keys(data).forEach(key => {
-        if (key !== 'profilePicture' && key !== 'cvFile' && data[key]) {
+    
+    const formData = new FormData();
+    // Ajout des champs de texte
+    Object.keys(data).forEach(key => {
+      if (key !== 'profilePicture' && key !== 'cvFile') {
+        // Gérer les champs complexes si nécessaire (pas dans cet exemple simple)
+        if (typeof data[key] === 'object' && data[key] !== null) {
+          formData.append(key, JSON.stringify(data[key]));
+        } else {
           formData.append(key, data[key]);
         }
-      });
-      
-      // Append files only if they exist
-      if (data.profilePicture && data.profilePicture.length > 0) {
-        formData.append('profilePicture', data.profilePicture[0], data.profilePicture[0].name);
       }
-      
-      // FIX: Changed 'cvFile' to 'cv' to match your backend's Multer configuration
-      if (data.cvFile && data.cvFile.length > 0) {
-        formData.append('cv', data.cvFile[0], data.cvFile[0].name);
-      }
+    });
 
-      if (editingMember) {
-        // Update member
-        await updateMember(editingMember.id, formData);
-        setMessage("Membre mis à jour avec succès !");
+    // Ajout des fichiers
+    if (data.profilePicture && data.profilePicture.length > 0) {
+      formData.append('profilePicture', data.profilePicture[0]);
+    }
+    // CORRECTION : Utiliser le nom de champ 'cv' pour correspondre au backend
+    if (data.cvFile && data.cvFile.length > 0) {
+      formData.append('cv', data.cvFile[0]);
+    }
+
+    try {
+      if (editingId) {
+        const updatedMember = await updateMember(editingId, formData);
+        setMembers(members.map(m => m.id === editingId ? updatedMember : m));
+        setEditingId(null);
+        setModalState({
+          isOpen: true,
+          message: 'Membre mis à jour avec succès !',
+          onConfirm: () => setModalState({ isOpen: false }),
+          onCancel: null,
+          showCancel: false
+        });
       } else {
-        // Create new member
-        await createMember(formData);
-        setMessage("Membre ajouté avec succès !");
+        const newMember = await createMember(formData);
+        setMembers([newMember, ...members]);
+        setModalState({
+          isOpen: true,
+          message: 'Membre ajouté avec succès !',
+          onConfirm: () => setModalState({ isOpen: false }),
+          onCancel: null,
+          showCancel: false
+        });
       }
-      reset();
-      setIsFormOpen(false);
-      setEditingMember(null);
-      fetchMembers(); // Refresh the member list
+      
+      reset(); // Réinitialise le formulaire
     } catch (error) {
       console.error('Erreur lors de l\'opération sur le membre:', error);
-      setMessage("Erreur lors de l'opération sur le membre.");
+      setModalState({
+        isOpen: true,
+        message: `Échec de l'opération: ${error.message || 'Erreur inconnue'}`,
+        onConfirm: () => setModalState({ isOpen: false }),
+        onCancel: null,
+        showCancel: false,
+        isError: true,
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
-
+  
   const handleEdit = (member) => {
-    setEditingMember(member);
-    setIsFormOpen(true);
-    // Populate the form with the member's data
-    Object.keys(member).forEach(key => {
-      if (key !== 'profilePicture' && key !== 'cvFile') {
-        setValue(key, member[key]);
-      }
+    setEditingId(member.id);
+    reset({
+      firstName: member.first_name || '',
+      lastName: member.last_name || '',
+      sex: member.sex || '',
+      location: member.location || '',
+      address: member.address || '',
+      contact: member.contact || '',
+      profession: member.profession || '',
+      employmentStructure: member.employment_structure || '',
+      companyOrProject: member.company_or_project || '',
+      activities: member.activities || '',
+      role: member.role || '',
+      is_new_member: member.is_new_member || false,
+      last_annual_inscription_date: member.last_annual_inscription_date || '',
+      has_paid_adhesion: member.has_paid_adhesion || false,
+      ag_absence_count: member.ag_absence_count || 0
     });
-  };
-
-  const handleDelete = async (memberId) => {
-    const isConfirmed = window.confirm("Êtes-vous sûr de vouloir supprimer ce membre ?");
-    if (isConfirmed) {
-      try {
-        await deleteMember(memberId);
-        fetchMembers();
-        setMessage("Membre supprimé avec succès !");
-      } catch (error) {
-        console.error('Failed to delete member:', error);
-        setMessage("Erreur lors de la suppression du membre.");
-      }
-    }
-  };
-  
-  const handleOpenForm = () => {
-    setIsFormOpen(true);
-    reset(); // Reset form when opening to add a new member
-    setEditingMember(null);
-  };
-  
-  const handleCloseForm = () => {
-    setIsFormOpen(false);
-    reset();
-    setEditingMember(null);
+    // Scroll vers le formulaire
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const filteredMembers = useMemo(() => {
-    return members.filter(member =>
-      member.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.profession.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [members, searchTerm]);
+    return members.filter(member => {
+      const fullName = `${member.first_name || ''} ${member.last_name || ''}`.toLowerCase();
+      const matchesSearch = fullName.includes(searchTerm.toLowerCase()) ||
+                          (member.profession || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (member.location || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (member.contact || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (member.address || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (member.employment_structure || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (member.company_or_project || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (member.activities || '').toLowerCase().includes(searchTerm.toLowerCase());
 
-  const leaderMembers = filteredMembers.filter(member => member.role === 'leader');
-  const regularMembers = filteredMembers.filter(member => member.role !== 'leader');
+      const matchesRole = filterRole === 'all' || (member.role || '').toLowerCase() === filterRole.toLowerCase();
+      const matchesProfession = filterProfession === 'all' || (member.profession || '').toLowerCase() === filterProfession.toLowerCase();
 
-  const pieChartData = useMemo(() => {
-    const roles = members.reduce((acc, member) => {
-      const role = member.role || 'Inconnu';
-      acc[role] = (acc[role] || 0) + 1;
+      return matchesSearch && matchesRole && matchesProfession;
+    });
+  }, [members, searchTerm, filterRole, filterProfession]);
+
+  const executiveBureau = useMemo(() => filteredMembers.filter(m => m.role === 'Bureau Exécutif'), [filteredMembers]);
+  const adhocCommittee = useMemo(() => filteredMembers.filter(m => m.role === 'Comité Adhoc'), [filteredMembers]);
+  const regularMembers = useMemo(() => filteredMembers.filter(m => m.role === 'Membre'), [filteredMembers]);
+
+  const genderData = useMemo(() => ({
+    labels: ['Hommes', 'Femmes'],
+    datasets: [{
+      data: [
+        members.filter(m => m.sex === 'Homme').length,
+        members.filter(m => m.sex === 'Femme').length,
+      ],
+      backgroundColor: ['rgba(59, 130, 246, 0.7)', 'rgba(236, 72, 153, 0.7)'],
+      borderColor: ['rgba(59, 130, 246, 1)', 'rgba(236, 72, 153, 1)'],
+      borderWidth: 1,
+    }]
+  }), [members]);
+
+  const professionChartData = useMemo(() => {
+    const professionCounts = members.reduce((acc, member) => {
+      if (member.profession) {
+        acc[member.profession] = (acc[member.profession] || 0) + 1;
+      }
       return acc;
     }, {});
-    
     return {
-      labels: Object.keys(roles),
-      datasets: [
-        {
-          data: Object.values(roles),
-          backgroundColor: [
-            'rgba(75, 192, 192, 0.6)',
-            'rgba(255, 99, 132, 0.6)',
-            'rgba(255, 206, 86, 0.6)',
-            'rgba(153, 102, 255, 0.6)',
-          ],
-          borderColor: [
-            'rgba(75, 192, 192, 1)',
-            'rgba(255, 99, 132, 1)',
-            'rgba(255, 206, 86, 1)',
-            'rgba(153, 102, 255, 1)',
-          ],
-          borderWidth: 1,
-        },
-      ],
+      labels: Object.keys(professionCounts),
+      datasets: [{
+        label: 'Nombre par Profession',
+        data: Object.values(professionCounts),
+        backgroundColor: [
+          'rgba(16, 185, 129, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(99, 102, 241, 0.7)',
+          'rgba(239, 68, 68, 0.7)', 'rgba(107, 114, 128, 0.7)', 'rgba(139, 92, 246, 0.7)',
+          'rgba(6, 182, 212, 0.7)'
+        ],
+        borderColor: [
+          'rgba(16, 185, 129, 1)', 'rgba(245, 158, 11, 1)', 'rgba(99, 102, 241, 1)',
+          'rgba(239, 68, 68, 1)', 'rgba(107, 114, 128, 1)', 'rgba(139, 92, 246, 1)',
+          'rgba(6, 182, 212, 1)'
+        ],
+        borderWidth: 1,
+      }]
     };
   }, [members]);
 
-  const barChartData = useMemo(() => {
-    const professions = members.reduce((acc, member) => {
-      const profession = member.profession || 'Non spécifié';
-      acc[profession] = (acc[profession] || 0) + 1;
-      return acc;
-    }, {});
-
-    return {
-      labels: Object.keys(professions),
-      datasets: [
-        {
-          label: 'Nombre de membres par profession',
-          data: Object.values(professions),
-          backgroundColor: 'rgba(54, 162, 235, 0.6)',
-          borderColor: 'rgba(54, 162, 235, 1)',
-          borderWidth: 1,
-        },
-      ],
-    };
-  }, [members]);
-
-  // Framer Motion variants
-  const fadeIn = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-  };
-
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-screen text-emerald-800">Chargement...</div>;
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen text-xl font-semibold text-emerald-800">Chargement des membres...</div>;
   }
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 lg:p-8 font-sans">
-      <CustomModal message={message} onClose={() => setMessage('')} />
+    <div className="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
+      {modalState.isOpen && (
+        <Modal 
+          message={modalState.message} 
+          onConfirm={modalState.onConfirm} 
+          onCancel={modalState.onCancel} 
+          showConfirm={modalState.showConfirm} 
+          showCancel={modalState.showCancel} 
+          isError={modalState.isError} 
+        />
+      )}
 
-      <motion.div initial="hidden" animate="visible" variants={fadeIn} className="bg-emerald-50 p-6 rounded-3xl shadow-lg mb-8">
-        <h1 className="text-3xl font-extrabold text-center text-emerald-800 mb-4">
-          Gestion des Membres
-        </h1>
-        <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-          <div className="flex-1 w-full sm:w-auto">
-            <div className="relative">
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Rechercher un membre..."
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition duration-300"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-          <button
-            onClick={handleOpenForm}
-            className="w-full sm:w-auto ml-0 sm:ml-4 bg-emerald-600 text-white font-bold py-2 px-6 rounded-full shadow-md hover:bg-emerald-700 transition duration-300 flex items-center justify-center"
-          >
-            <FiPlus className="mr-2" />
-            Ajouter un membre
-          </button>
-        </div>
-      </motion.div>
+      {/* Titre principal avec animation */}
+      <motion.h1 
+        initial={{ opacity: 0, y: -20 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ duration: 0.5 }} 
+        className="text-3xl sm:text-4xl font-extrabold mb-8 text-emerald-800 flex items-center" 
+      >
+        <FiUsers className="mr-3" /> Gestion des Membres
+      </motion.h1>
 
       {/* Formulaire d'ajout/édition */}
-      {isFormOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="bg-white p-6 rounded-3xl shadow-lg mb-8"
+      {user?.role === 'admin' && (
+        <motion.div 
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1 }} 
+          transition={{ delay: 0.2 }} 
+          className="bg-white shadow-lg rounded-xl p-6 mb-8 border border-gray-100" 
         >
-          <h2 className="text-2xl font-bold mb-6 text-emerald-800 border-b-2 pb-2 border-emerald-600">
-            {editingMember ? 'Modifier un membre' : 'Ajouter un nouveau membre'}
+          <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center">
+            {editingId ? (
+              <>
+                <FiEdit2 className="mr-2 text-emerald-600" /> Modifier les informations du Membre
+              </>
+            ) : (
+              <>
+                <FiPlus className="mr-2 text-emerald-600" /> Ajouter un Nouveau Membre
+              </>
+            )}
           </h2>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               <div>
-                <label className="block text-gray-700">Prénom</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Prénom *</label>
                 <input
                   type="text"
-                  {...register('firstName', { required: 'Le prénom est requis.' })}
-                  className="w-full mt-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  placeholder="Ex: Jean"
+                  {...register('firstName', { required: 'Le prénom est requis' })}
+                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 />
-                {errors.firstName && <span className="text-red-500 text-sm">{errors.firstName.message}</span>}
+                {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName.message}</p>}
               </div>
               <div>
-                <label className="block text-gray-700">Nom</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
                 <input
                   type="text"
-                  {...register('lastName', { required: 'Le nom est requis.' })}
-                  className="w-full mt-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  placeholder="Ex: Dupont"
+                  {...register('lastName', { required: 'Le nom est requis' })}
+                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 />
-                {errors.lastName && <span className="text-red-500 text-sm">{errors.lastName.message}</span>}
+                {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName.message}</p>}
               </div>
               <div>
-                <label className="block text-gray-700">Sexe</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Sexe *</label>
                 <select
-                  {...register('sex', { required: 'Le sexe est requis.' })}
-                  className="w-full mt-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  {...register('sex', { required: 'Le sexe est requis' })}
+                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 >
                   <option value="">Sélectionner...</option>
-                  <option value="male">Homme</option>
-                  <option value="female">Femme</option>
+                  {sexOptions.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
                 </select>
-                {errors.sex && <span className="text-red-500 text-sm">{errors.sex.message}</span>}
+                {errors.sex && <p className="text-red-500 text-sm mt-1">{errors.sex.message}</p>}
               </div>
               <div>
-                <label className="block text-gray-700">Lieu</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Lieu *</label>
                 <input
                   type="text"
-                  {...register('location', { required: 'Le lieu est requis.' })}
-                  className="w-full mt-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  placeholder="Ex: Douala"
+                  {...register('location', { required: 'Le lieu est requis' })}
+                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 />
-                {errors.location && <span className="text-red-500 text-sm">{errors.location.message}</span>}
+                {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location.message}</p>}
               </div>
               <div>
-                <label className="block text-gray-700">Adresse</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Adresse *</label>
                 <input
                   type="text"
-                  {...register('address', { required: 'L\'adresse est requise.' })}
-                  className="w-full mt-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  placeholder="Ex: BP 1234, Douala"
+                  {...register('address', { required: 'L\'adresse est requise' })}
+                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 />
-                {errors.address && <span className="text-red-500 text-sm">{errors.address.message}</span>}
+                {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address.message}</p>}
               </div>
               <div>
-                <label className="block text-gray-700">Contact</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contact *</label>
                 <input
                   type="text"
-                  {...register('contact', { required: 'Le contact est requis.' })}
-                  className="w-full mt-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  placeholder="Ex: +237 6xx-xx-xx-xx"
+                  {...register('contact', { required: 'Le contact est requis' })}
+                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 />
-                {errors.contact && <span className="text-red-500 text-sm">{errors.contact.message}</span>}
+                {errors.contact && <p className="text-red-500 text-sm mt-1">{errors.contact.message}</p>}
               </div>
               <div>
-                <label className="block text-gray-700">Profession</label>
-                <input
-                  type="text"
-                  {...register('profession', { required: 'La profession est requise.' })}
-                  className="w-full mt-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-                {errors.profession && <span className="text-red-500 text-sm">{errors.profession.message}</span>}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Profession *</label>
+                <select
+                  {...register('profession', { required: 'La profession est requise' })}
+                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                >
+                  <option value="">Sélectionner...</option>
+                  {professionOptions.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+                {errors.profession && <p className="text-red-500 text-sm mt-1">{errors.profession.message}</p>}
               </div>
               <div>
-                <label className="block text-gray-700">Structure d'emploi</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Structure d'emploi</label>
                 <input
                   type="text"
+                  placeholder="Ex: Secteur Public"
                   {...register('employmentStructure')}
-                  className="w-full mt-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 />
               </div>
               <div>
-                <label className="block text-gray-700">Entreprise ou projet</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Entreprise ou Projet</label>
                 <input
                   type="text"
+                  placeholder="Ex: Projet HIMO"
                   {...register('companyOrProject')}
-                  className="w-full mt-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 />
               </div>
               <div>
-                <label className="block text-gray-700">Activités</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Activités</label>
                 <input
                   type="text"
+                  placeholder="Ex: Agriculture urbaine"
                   {...register('activities')}
-                  className="w-full mt-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 />
               </div>
               <div>
-                <label className="block text-gray-700">Rôle</label>
-                <input
-                  type="text"
-                  {...register('role')}
-                  className="w-full mt-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Rôle *</label>
+                <select
+                  {...register('role', { required: 'Le rôle est requis' })}
+                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                >
+                  <option value="">Sélectionner...</option>
+                  {rolesOptions.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+                {errors.role && <p className="text-red-500 text-sm mt-1">{errors.role.message}</p>}
               </div>
               <div className="md:col-span-2">
-                <label className="block text-gray-700">Photo de profil</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Photo de profil</label>
                 <input
                   type="file"
-                  {...register('profilePicture')}
+                  {...register('profilePicture', {
+                    validate: {
+                      fileSize: files => !files[0] || files[0].size <= 5 * 1024 * 1024 || 'La photo de profil ne doit pas dépasser 5MB'
+                    }
+                  })}
                   accept="image/*"
-                  className="w-full mt-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 w-full"
                 />
+                {errors.profilePicture && <p className="text-red-500 text-sm mt-1">{errors.profilePicture.message}</p>}
               </div>
               <div className="md:col-span-2">
-                <label className="block text-gray-700">Fichier CV</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Fichier CV</label>
                 <input
                   type="file"
-                  {...register('cvFile')}
+                  {...register('cvFile', {
+                    validate: {
+                      fileSize: files => !files[0] || files[0].size <= 10 * 1024 * 1024 || 'Le fichier CV ne doit pas dépasser 10MB'
+                    }
+                  })}
                   accept=".pdf,.doc,.docx"
-                  className="w-full mt-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 w-full"
                 />
+                {errors.cvFile && <p className="text-red-500 text-sm mt-1">{errors.cvFile.message}</p>}
               </div>
+              {/* Nouveaux champs pour l'admin */}
+              <div className="md:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nouveau membre ?</label>
+                <input type="checkbox" {...register('is_new_member')} className="form-checkbox h-5 w-5 text-emerald-600 rounded" />
+              </div>
+              <div className="md:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date dernière inscription</label>
+                <input type="date" {...register('last_annual_inscription_date')} className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+              </div>
+              <div className="md:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Adhésion payée ?</label>
+                <input type="checkbox" {...register('has_paid_adhesion')} className="form-checkbox h-5 w-5 text-emerald-600 rounded" />
+              </div>
+              <div className="md:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre d'absences AG</label>
+                <input type="number" {...register('ag_absence_count', { valueAsNumber: true })} className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+              </div>
+              {/* Les champs social_contribution_status et tontine_status ne sont pas gérés ici pour le moment */}
             </div>
-            
-            <div className="flex justify-end space-x-4 mt-6">
-              <button
-                type="button"
-                onClick={handleCloseForm}
-                className="px-6 py-2 rounded-lg text-emerald-600 border border-emerald-600 hover:bg-emerald-50 transition duration-300"
-              >
-                Annuler
-              </button>
+
+            <div className="flex justify-end space-x-4">
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={() => { setEditingId(null); reset(); }}
+                  className="px-6 py-2 rounded-lg text-red-600 border border-red-600 hover:bg-red-50 transition-colors"
+                >
+                  Annuler la modification
+                </button>
+              )}
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`px-6 py-2 rounded-lg text-white font-bold transition duration-300 ${
+                className={`px-6 py-2 rounded-lg text-white font-bold transition-colors ${
                   isSubmitting ? 'bg-emerald-400' : 'bg-emerald-600 hover:bg-emerald-700'
                 }`}
               >
-                {isSubmitting ? 'Envoi en cours...' : (editingMember ? 'Sauvegarder' : 'Ajouter')}
+                {isSubmitting ? 'Envoi en cours...' : (editingId ? 'Sauvegarder les modifications' : 'Ajouter')}
               </button>
             </div>
           </form>
         </motion.div>
       )}
 
+      {/* Barre de recherche et de filtre */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ duration: 0.5, delay: 0.4 }} 
+        className="bg-white shadow-lg rounded-xl p-6 mb-8 border border-gray-100 flex flex-col md:flex-row gap-4"
+      >
+        <div className="relative flex-grow">
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Rechercher par nom, profession..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          />
+        </div>
+        <div>
+          <select
+            value={filterRole}
+            onChange={(e) => setFilterRole(e.target.value)}
+            className="w-full md:w-auto p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          >
+            <option value="all">Tous les rôles</option>
+            {rolesOptions.map(role => (
+              <option key={role} value={role}>{role}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <select
+            value={filterProfession}
+            onChange={(e) => setFilterProfession(e.target.value)}
+            className="w-full md:w-auto p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          >
+            <option value="all">Toutes les professions</option>
+            {professionOptions.map(prof => (
+              <option key={prof} value={prof}>{prof}</option>
+            ))}
+          </select>
+        </div>
+      </motion.div>
+
       {/* Statistiques (Charts) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-        <motion.div variants={fadeIn} transition={{ duration: 0.5 }} className="bg-white p-6 rounded-3xl shadow-lg">
-          <h2 className="text-2xl font-bold mb-4 text-emerald-800">Répartition par rôle</h2>
+        <motion.div variants={fadeIn} transition={{ duration: 0.5 }} className="bg-white p-6 rounded-3xl shadow-lg border border-gray-100">
+          <h2 className="text-2xl font-bold mb-4 text-gray-800">Répartition par sexe</h2>
           <div className="h-64 flex items-center justify-center">
             {members.length > 0 ? (
-              <Pie data={pieChartData} />
+              <Pie data={genderData} />
             ) : (
-              <p className="text-gray-500">Aucune donnée de rôle disponible.</p>
+              <p className="text-gray-500">Aucune donnée disponible.</p>
             )}
           </div>
         </motion.div>
-        <motion.div variants={fadeIn} transition={{ duration: 0.5, delay: 0.2 }} className="bg-white p-6 rounded-3xl shadow-lg">
-          <h2 className="text-2xl font-bold mb-4 text-emerald-800">Membres par profession</h2>
+        <motion.div variants={fadeIn} transition={{ duration: 0.5, delay: 0.2 }} className="bg-white p-6 rounded-3xl shadow-lg border border-gray-100">
+          <h2 className="text-2xl font-bold mb-4 text-gray-800">Membres par profession</h2>
           <div className="h-64 flex items-center justify-center">
             {members.length > 0 ? (
-              <Bar data={barChartData} />
+              <Bar data={professionChartData} />
             ) : (
-              <p className="text-gray-500">Aucune donnée de profession disponible.</p>
+              <p className="text-gray-500">Aucune donnée disponible.</p>
             )}
           </div>
         </motion.div>
       </div>
 
-      {/* Leaders */}
-      {leaderMembers.length > 0 && (
+      {/* Sections des membres */}
+      {executiveBureau.length > 0 && (
         <div className="mb-10">
           <h2 className="text-2xl font-bold mb-6 text-emerald-800 border-b-2 pb-2 border-emerald-600 flex items-center">
             <FiUsers className="mr-2" />
-            Leaders
+            Bureau Exécutif
             <span className="ml-auto text-sm font-normal bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">
-              {leaderMembers.length} leader{leaderMembers.length > 1 ? 's' : ''}
+              {executiveBureau.length} membre{executiveBureau.length > 1 ? 's' : ''}
             </span>
           </h2>
-          
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {leaderMembers.map((member, index) => (
+            {executiveBureau.map((member, index) => (
               <motion.div
                 key={member.id}
                 variants={fadeIn}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                <MemberCard
-                  member={member}
-                  onDelete={handleDelete}
-                  userRole={user?.role}
-                  onEdit={handleEdit}
+                <MemberCard 
+                  member={member} 
+                  onDelete={handleOpenDeleteModal} 
+                  userRole={user?.role} 
+                  onEdit={handleEdit} 
                 />
               </motion.div>
             ))}
@@ -466,7 +656,34 @@ const Members = () => {
         </div>
       )}
 
-      {/* Membres */}
+      {adhocCommittee.length > 0 && (
+        <div className="mb-10">
+          <h2 className="text-2xl font-bold mb-6 text-emerald-800 border-b-2 pb-2 border-emerald-600 flex items-center">
+            <FiUsers className="mr-2" />
+            Comité Adhoc
+            <span className="ml-auto text-sm font-normal bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">
+              {adhocCommittee.length} membre{adhocCommittee.length > 1 ? 's' : ''}
+            </span>
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {adhocCommittee.map((member, index) => (
+              <motion.div
+                key={member.id}
+                variants={fadeIn}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+              >
+                <MemberCard 
+                  member={member} 
+                  onDelete={handleOpenDeleteModal} 
+                  userRole={user?.role} 
+                  onEdit={handleEdit} 
+                />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {regularMembers.length > 0 && (
         <div className="mb-10">
           <h2 className="text-2xl font-bold mb-6 text-emerald-800 border-b-2 pb-2 border-emerald-600 flex items-center">
@@ -476,7 +693,6 @@ const Members = () => {
               {regularMembers.length} membre{regularMembers.length > 1 ? 's' : ''}
             </span>
           </h2>
-          
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {regularMembers.map((member, index) => (
               <motion.div
@@ -484,11 +700,11 @@ const Members = () => {
                 variants={fadeIn}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                <MemberCard
-                  member={member}
-                  onDelete={handleDelete}
-                  userRole={user?.role}
-                  onEdit={handleEdit}
+                <MemberCard 
+                  member={member} 
+                  onDelete={handleOpenDeleteModal} 
+                  userRole={user?.role} 
+                  onEdit={handleEdit} 
                 />
               </motion.div>
             ))}
