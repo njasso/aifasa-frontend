@@ -1,41 +1,11 @@
-import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { deleteMember } from '../services/memberService';
+import React from 'react';
+import { motion } from 'framer-motion';
+import { FiEdit2, FiTrash2, FiFileText, FiMapPin, FiPhone, FiUser } from 'react-icons/fi';
 
-// Composant Modal pour remplacer les alertes natives
-const Modal = ({ message, onConfirm, onCancel }) => {
-  return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
-      <div className="bg-white p-6 rounded-lg shadow-xl text-center">
-        <p className="text-lg font-semibold mb-4">{message}</p>
-        <div className="flex gap-4 justify-center">
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
-          >
-            Confirmer
-          </button>
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors"
-          >
-            Annuler
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Image par défaut si le membre n'a pas de photo de profil
-const DEFAULT_PROFILE_PIC = '/images/default_profile.png';
-
-const MemberCard = ({ member, onDelete, userRole, onEdit }) => {
-  const { user } = useAuth();
-  const isAdmin = userRole === 'admin' || user?.role === 'admin';
-
-  // État pour gérer la visibilité de la modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
+const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
+  // Utilisation de la propriété 'photo_url' et d'un fallback pour la photo de profil
+  const profilePictureUrl = member.photo_url || `https://ui-avatars.com/api/?name=${member.first_name}+${member.last_name}&background=10b981&color=fff&bold=true`;
+  const isAdmin = userRole === 'admin';
 
   // Fonction pour extraire le nom de fichier suggéré pour le CV
   const getSuggestedCvFileName = (url, memberName) => {
@@ -52,129 +22,92 @@ const MemberCard = ({ member, onDelete, userRole, onEdit }) => {
   const suggestedFileName = member.cv_url
     ? getSuggestedCvFileName(member.cv_url, `${member.first_name}_${member.last_name}`)
     : '';
-  
-  const handleDeleteClick = () => {
-    setIsModalOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    try {
-      await deleteMember(member.id);
-      onDelete(member.id);
-      setIsModalOpen(false);
-      // Remplacez l'alerte par une notification ou une modal de succès si nécessaire
-      // alert('Membre supprimé avec succès !'); 
-    } catch (error) {
-      console.error('Erreur lors de la suppression du membre:', error);
-      setIsModalOpen(false);
-      // Remplacez l'alerte par une notification ou une modal d'erreur si nécessaire
-      // alert('Échec de la suppression du membre. Veuillez vérifier la console.');
-    }
-  };
-
-  const handleEditClick = () => {
-    if (onEdit) {
-      onEdit(member);
-    } else {
-      console.log('La prop onEdit n\'a pas été fournie au composant MemberCard.');
-    }
-  };
-
-  // Définition des couleurs pour la cohérence visuelle
-  const primaryGreen = 'text-emerald-700';
-  const neutralDark = 'text-gray-800';
-  const neutralBorder = 'border-gray-200';
-  const redBg = 'bg-red-500';
-  const redHover = 'hover:bg-red-600';
-  const yellowBg = 'bg-yellow-500';
-  const yellowHover = 'hover:bg-yellow-600';
 
   return (
-    <div className={`bg-white shadow-lg rounded-xl p-6 flex flex-col items-center text-center border ${neutralBorder} hover:shadow-xl transition-shadow duration-300`}>
-      {isModalOpen && (
-        <Modal
-          message={`Êtes-vous sûr de vouloir supprimer ${member.first_name} ${member.last_name} ?`}
-          onConfirm={confirmDelete}
-          onCancel={() => setIsModalOpen(false)}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.2 }}
+      className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-gray-100 flex flex-col h-full"
+    >
+      <div className="relative">
+        <img
+          src={profilePictureUrl}
+          alt={`Photo de profil de ${member.first_name} ${member.last_name}`}
+          className="w-full h-48 object-cover object-center"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = `https://ui-avatars.com/api/?name=${member.first_name}+${member.last_name}&background=10b981&color=fff&bold=true`;
+          }}
         />
-      )}
-
-      <img
-        src={member.photo_url || DEFAULT_PROFILE_PIC}
-        alt={`${member.first_name} ${member.last_name}`}
-        className="w-28 h-28 object-cover rounded-full mb-4 border-4 border-emerald-400 shadow-md"
-        onError={(e) => { e.target.onerror = null; e.target.src = DEFAULT_PROFILE_PIC; }}
-      />
-      <h3 className={`text-xl font-bold ${primaryGreen} mb-2`}>{member.last_name} {member.first_name}</h3>
-      <p className={`text-md font-semibold ${neutralDark} mb-1`}>
-        Rôle: <span className="font-normal text-gray-700">{member.role || 'N/A'}</span>
-      </p>
-      <p className="text-gray-700 text-sm mb-1">
-        Profession: <span className="font-normal">{member.profession || 'N/A'}</span>
-      </p>
-      <p className="text-gray-600 text-sm mb-1">
-        Sexe: <span className="font-normal">{member.sex || 'N/A'}</span>
-      </p>
-      <p className="text-gray-600 text-sm mb-1">
-        Localisation: <span className="font-normal">{member.location || 'N/A'}</span>
-      </p>
-      <p className="text-gray-600 text-sm mb-1">
-        Adresse: <span className="font-normal">{member.address || 'N/A'}</span>
-      </p>
-      <p className="text-gray-600 text-sm mb-1">
-        Contact: <span className="font-normal">{member.contact || 'N/A'}</span>
-      </p>
-      <p className="text-gray-600 text-sm mb-1">
-        Structure d'emploi: <span className="font-normal">{member.employment_structure || 'N/A'}</span>
-      </p>
-      <p className="text-gray-600 text-sm mb-2">
-        Entreprise/Projet: <span className="font-normal">{member.company_or_project || 'N/A'}</span>
-      </p>
-      <p className="text-gray-500 text-xs italic">
-        {member.activities ? `Activités: ${member.activities}` : ''}
-      </p>
-
-      {/* Liens pour le CV */}
-      {member.cv_url && (
-        <div className="flex flex-col sm:flex-row gap-2 mt-4 w-full">
-          <a
-            href={member.cv_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            download={suggestedFileName}
-            className="flex-1 bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors duration-300 text-center"
-          >
-            Télécharger le CV
-          </a>
-          <a
-            href={member.cv_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors duration-300 text-center"
-          >
-            Voir le CV
-          </a>
+        <div className="absolute top-3 right-3 bg-emerald-500 text-white text-xs font-semibold px-2 py-1 rounded-full shadow-md">
+          {member.role}
         </div>
-      )}
+      </div>
+      <div className="p-5 flex-grow flex flex-col">
+        <h3 className="text-xl font-bold text-gray-900 mb-1 leading-tight">
+          {member.first_name} {member.last_name}
+        </h3>
+        <p className="text-sm text-gray-500 mb-4">{member.profession}</p>
 
-      {/* Boutons d'action (visible uniquement pour l'admin) */}
-      {isAdmin && (
-        <div className="mt-4 flex gap-2">
-          <button
-            onClick={handleEditClick}
-            className={`px-4 py-2 text-sm rounded-lg ${yellowBg} text-white ${yellowHover} transition-colors`}
-          >
-            Éditer
-          </button>
-          <button
-            onClick={handleDeleteClick}
-            className={`px-4 py-2 text-sm rounded-lg ${redBg} text-white ${redHover} transition-colors`}
-          >
-            Supprimer
-          </button>
+        <div className="space-y-2 text-gray-700 text-sm flex-grow">
+          {member.location && (
+            <p className="flex items-center">
+              <FiMapPin className="mr-2 text-emerald-500 flex-shrink-0" />
+              {member.location}
+            </p>
+          )}
+          {member.contact && (
+            <p className="flex items-center">
+              <FiPhone className="mr-2 text-emerald-500 flex-shrink-0" />
+              {member.contact}
+            </p>
+          )}
+          {member.sex && (
+            <p className="flex items-center">
+              <FiUser className="mr-2 text-emerald-500 flex-shrink-0" />
+              {member.sex}
+            </p>
+          )}
         </div>
-      )}
-    </div>
+
+        {/* Section des boutons d'action */}
+        {isAdmin && (
+          <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-end space-x-2">
+            {/* Bouton pour télécharger le CV, visible uniquement si le CV existe */}
+            {member.cv_url && (
+              <a
+                href={member.cv_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                download={suggestedFileName}
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition-colors"
+                title="Télécharger le CV"
+              >
+                <FiFileText />
+              </a>
+            )}
+            {/* Bouton d'édition */}
+            <button
+              onClick={() => onEdit(member)}
+              className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+              title="Modifier"
+            >
+              <FiEdit2 />
+            </button>
+            {/* Bouton de suppression */}
+            <button
+              onClick={() => onDelete(member.id)}
+              className="flex items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+              title="Supprimer"
+            >
+              <FiTrash2 />
+            </button>
+          </div>
+        )}
+      </div>
+    </motion.div>
   );
 };
 
