@@ -530,6 +530,19 @@ const Members = () => {
         </motion.div>
       )}
 
+      {/* Stats Section */}
+      <div className="bg-white shadow-lg rounded-xl p-6 mb-8 border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <h3 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">Répartition par Sexe</h3>
+          <Pie data={genderData} />
+        </div>
+        <div>
+          <h3 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">Répartition par Profession</h3>
+          <Bar data={professionChartData} />
+        </div>
+      </div>
+
+
       {/* Barre de recherche et de filtres */}
       <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-8">
         <div className="relative flex-1">
