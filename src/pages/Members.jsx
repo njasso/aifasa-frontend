@@ -5,7 +5,7 @@ import MemberCard from '../components/MemberCard';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
 import { motion } from 'framer-motion';
-import { FiUser, FiUsers, FiEdit2, FiPlus, FiSearch, FiPhone, FiUpload, FiMapPin } from 'react-icons/fi';
+import { FiUser, FiUsers, FiEdit2, FiPlus, FiSearch, FiPhone, FiUpload, FiMapPin, FiFileText } from 'react-icons/fi';
 
 // Enregistrement des composants Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
@@ -26,7 +26,9 @@ const Members = () => {
     activities: '',
     role: '',
     profilePicture: null,
-    fileName: ''
+    profilePictureFileName: '', // Changed to be more specific
+    cvFile: null, // New state for the CV file
+    cvFileName: '' // New state for the CV file name
   });
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +36,8 @@ const Members = () => {
   const [filterRole, setFilterRole] = useState('all');
   const [filterProfession, setFilterProfession] = useState('all');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [fileError, setFileError] = useState('');
+  const [profilePictureError, setProfilePictureError] = useState(''); // Changed to be more specific
+  const [cvFileError, setCvFileError] = useState(''); // New state for CV file error
 
   // Options pour les menus déroulants
   const rolesOptions = ['Bureau Exécutif', 'Comité Adhoc', 'Membre'];
@@ -71,15 +74,23 @@ const Members = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setFileError('');
+    setProfilePictureError('');
+    setCvFileError('');
     
     if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.sex.trim() || !formData.role.trim() || !formData.profession.trim()) {
+      // NOTE: The original code uses `alert()`, which should be replaced by a custom modal for a better user experience.
       alert('Veuillez remplir au moins les champs obligatoires : Prénom, Nom, Sexe, Rôle, Profession.');
       return;
     }
 
     if (formData.profilePicture && formData.profilePicture.size > 5 * 1024 * 1024) {
-      setFileError('La photo de profil ne doit pas dépasser 5MB');
+      setProfilePictureError('La photo de profil ne doit pas dépasser 5MB');
+      return;
+    }
+
+    // New check for CV file size
+    if (formData.cvFile && formData.cvFile.size > 10 * 1024 * 1024) {
+      setCvFileError('Le fichier CV ne doit pas dépasser 10MB');
       return;
     }
 
@@ -89,26 +100,39 @@ const Members = () => {
       const data = new FormData();
       for (const key in formData) {
         if (formData[key] !== null && formData[key] !== '') {
-          data.append(key, formData[key]);
+          // Special handling for files
+          if (key === 'profilePicture' && formData[key]) {
+            data.append('profile_picture', formData[key]);
+          } else if (key === 'cvFile' && formData[key]) {
+            data.append('cv_file', formData[key]);
+          } else if (key !== 'profilePictureFileName' && key !== 'cvFileName') {
+            data.append(key, formData[key]);
+          }
         }
       }
 
       if (editingId) {
+        // Assume updateMember can handle FormData
         const updatedMember = await updateMember(editingId, data);
         setMembers(members.map(m => m.id === editingId ? updatedMember : m));
         setEditingId(null);
         alert('Membre mis à jour avec succès !');
       } else {
+        // Assume createMember can handle FormData
         const newMember = await createMember(data);
         setMembers([newMember, ...members]);
         alert('Membre ajouté avec succès !');
       }
       
+      // Reset form data and errors
       setFormData({
         firstName: '', lastName: '', sex: '', location: '', address: '',
         contact: '', profession: '', employmentStructure: '', companyOrProject: '',
-        activities: '', role: '', profilePicture: null, fileName: ''
+        activities: '', role: '', profilePicture: null, profilePictureFileName: '',
+        cvFile: null, cvFileName: ''
       });
+      setProfilePictureError('');
+      setCvFileError('');
       e.target.reset();
     } catch (error) {
       console.error('Erreur lors de l\'opération sur le membre:', error);
@@ -118,19 +142,41 @@ const Members = () => {
     }
   };
 
-  const handleFileChange = (e) => {
+  // Handler for profile picture file change
+  const handleProfilePictureChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setFileError('Le fichier ne doit pas dépasser 5MB');
+        setProfilePictureError('Le fichier ne doit pas dépasser 5MB');
         return;
       }
       setFormData({
         ...formData,
         profilePicture: file,
-        fileName: file.name
+        profilePictureFileName: file.name
       });
-      setFileError('');
+      setProfilePictureError('');
+    } else {
+      setFormData({ ...formData, profilePicture: null, profilePictureFileName: '' });
+    }
+  };
+  
+  // New handler for CV file change
+  const handleCvFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        setCvFileError('Le fichier CV ne doit pas dépasser 10MB');
+        return;
+      }
+      setFormData({
+        ...formData,
+        cvFile: file,
+        cvFileName: file.name
+      });
+      setCvFileError('');
+    } else {
+      setFormData({ ...formData, cvFile: null, cvFileName: '' });
     }
   };
 
@@ -148,13 +194,17 @@ const Members = () => {
       companyOrProject: member.company_or_project || '',
       activities: member.activities || '',
       role: member.role || '',
+      // Reset file inputs when editing
       profilePicture: null,
-      fileName: ''
+      profilePictureFileName: '',
+      cvFile: null,
+      cvFileName: ''
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id) => {
+    // NOTE: The original code uses `window.confirm()`, which should be replaced by a custom modal for a better user experience.
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce membre ? Cette action est irréversible.')) {
       try {
         await deleteMember(id);
@@ -414,23 +464,45 @@ const Members = () => {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Photo de Profil</label>
-                <label className={`block w-full border ${fileError ? 'border-red-500' : 'border-gray-200'} p-3 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500`}>
+                <label className={`block w-full border ${profilePictureError ? 'border-red-500' : 'border-gray-200'} p-3 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500`}>
                   <div className="flex items-center justify-between">
-                    <span className={`truncate ${formData.fileName ? 'text-gray-800' : 'text-gray-500'}`}>
-                      {formData.fileName || "Choisir un fichier..."}
+                    <span className={`truncate ${formData.profilePictureFileName ? 'text-gray-800' : 'text-gray-500'}`}>
+                      {formData.profilePictureFileName || "Choisir un fichier..."}
                     </span>
                     <FiUpload className="text-emerald-600" />
                   </div>
                   <input
                     type="file"
-                    onChange={handleFileChange}
+                    onChange={handleProfilePictureChange}
                     className="hidden"
                     accept="image/*"
                   />
                 </label>
-                {fileError && <p className="mt-1 text-sm text-red-600">{fileError}</p>}
+                {profilePictureError && <p className="mt-1 text-sm text-red-600">{profilePictureError}</p>}
                 <p className="mt-1 text-xs text-gray-500">Max. 5MB (JPEG, PNG)</p>
               </div>
+
+              {/* New field for CV upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">CV</label>
+                <label className={`block w-full border ${cvFileError ? 'border-red-500' : 'border-gray-200'} p-3 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500`}>
+                  <div className="flex items-center justify-between">
+                    <span className={`truncate ${formData.cvFileName ? 'text-gray-800' : 'text-gray-500'}`}>
+                      {formData.cvFileName || "Choisir un fichier..."}
+                    </span>
+                    <FiFileText className="text-emerald-600" />
+                  </div>
+                  <input
+                    type="file"
+                    onChange={handleCvFileChange}
+                    className="hidden"
+                    accept=".pdf,.doc,.docx"
+                  />
+                </label>
+                {cvFileError && <p className="mt-1 text-sm text-red-600">{cvFileError}</p>}
+                <p className="mt-1 text-xs text-gray-500">Max. 10MB (PDF, DOC, DOCX)</p>
+              </div>
+
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4">
@@ -460,7 +532,8 @@ const Members = () => {
                     setFormData({
                       firstName: '', lastName: '', sex: '', location: '', address: '',
                       contact: '', profession: '', employmentStructure: '', companyOrProject: '',
-                      activities: '', role: '', profilePicture: null, fileName: ''
+                      activities: '', role: '', profilePicture: null, profilePictureFileName: '',
+                      cvFile: null, cvFileName: ''
                     });
                   }}
                   className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-300 shadow-md"
@@ -651,6 +724,7 @@ const Members = () => {
                     variants={fadeIn}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                   >
+                    {/* The MemberCard component would need to be updated to handle a cv_url prop */}
                     <MemberCard 
                       member={member} 
                       onDelete={handleDelete} 
