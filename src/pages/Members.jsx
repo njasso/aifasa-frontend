@@ -5,15 +5,17 @@ import MemberCard from '../components/MemberCard';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
 import { motion } from 'framer-motion';
-import { FiUser, FiUsers, FiEdit2, FiPlus, FiSearch, FiUpload, FiFileText, FiXCircle } from 'react-icons/fi';
-
+import { FiUser, FiUsers, FiEdit2, FiPlus, FiSearch, FiPhone, FiUpload, FiMapPin, FiFileText, FiXCircle } from 'react-icons/fi';
+// Enregistrement des composants Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
-
+// Composant Modal pour remplacer les alertes natives
 const Modal = ({ message, onConfirm, onCancel, showConfirm = true, showCancel = true, isError = false }) => {
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50 p-4">
       <div className="bg-white p-6 rounded-lg shadow-xl text-center max-w-sm mx-auto">
-        {isError && <FiXCircle className="mx-auto text-red-500 text-4xl mb-4" />}
+        {isError && (
+          <FiXCircle className="mx-auto text-red-500 text-4xl mb-4" />
+        )}
         <p className="text-lg font-semibold mb-4 text-gray-800">{message}</p>
         <div className="flex gap-4 justify-center">
           {showConfirm && (
@@ -37,7 +39,6 @@ const Modal = ({ message, onConfirm, onCancel, showConfirm = true, showCancel = 
     </div>
   );
 };
-
 const Members = () => {
   const { user } = useAuth();
   const [members, setMembers] = useState([]);
@@ -66,6 +67,7 @@ const Members = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [profilePictureError, setProfilePictureError] = useState('');
   const [cvFileError, setCvFileError] = useState('');
+  // État pour la gestion des modals (confirmation, succès, erreur)
   const [modalState, setModalState] = useState({
     isOpen: false,
     message: '',
@@ -76,8 +78,9 @@ const Members = () => {
     isError: false,
   });
   const [memberToDeleteId, setMemberToDeleteId] = useState(null);
-
+  // Options pour les menus déroulants
   const rolesOptions = ['Bureau Exécutif', 'Comité Adhoc', 'Membre'];
+  const sexOptions = ['Homme', 'Femme'];
   const professionOptions = [
     'Ingénieur Agronome',
     'Ingénieur des Eaux et Forêts',
@@ -86,12 +89,11 @@ const Members = () => {
     'Ingénieur Halieute',
     'Autre'
   ];
-
+  // Animation variants
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 }
   };
-
   useEffect(() => {
     const fetchMembers = async () => {
       setLoading(true);
@@ -114,7 +116,6 @@ const Members = () => {
     };
     fetchMembers();
   }, []);
-
   const handleOpenDeleteModal = (id) => {
     const memberName = members.find(m => m.id === id)?.first_name + ' ' + members.find(m => m.id === id)?.last_name;
     setMemberToDeleteId(id);
@@ -128,10 +129,8 @@ const Members = () => {
       isError: false,
     });
   };
-
   const confirmDelete = async () => {
     if (!memberToDeleteId) return;
-
     setModalState({ ...modalState, isOpen: false });
     
     try {
@@ -159,7 +158,6 @@ const Members = () => {
       setMemberToDeleteId(null);
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setProfilePictureError('');
@@ -176,23 +174,19 @@ const Members = () => {
       });
       return;
     }
-
     if (formData.profilePicture && formData.profilePicture.size > 5 * 1024 * 1024) {
       setProfilePictureError('La photo de profil ne doit pas dépasser 5MB');
       return;
     }
-
     if (formData.cvFile && formData.cvFile.size > 10 * 1024 * 1024) {
       setCvFileError('Le fichier CV ne doit pas dépasser 10MB');
       return;
     }
-
     setIsSubmitting(true);
     
     try {
       const data = new FormData();
-      
-      // Ajout des champs texte
+      // Ajout des champs de texte
       data.append('firstName', formData.firstName);
       data.append('lastName', formData.lastName);
       data.append('sex', formData.sex);
@@ -204,20 +198,13 @@ const Members = () => {
       data.append('companyOrProject', formData.companyOrProject);
       data.append('activities', formData.activities);
       data.append('role', formData.role);
-
-      // Ajout des fichiers avec les noms exacts attendus par le backend
+      // Ajout des fichiers, en utilisant les noms de champ corrects
       if (formData.profilePicture) {
         data.append('profilePicture', formData.profilePicture);
       }
       if (formData.cvFile) {
-        data.append('cv', formData.cvFile); // Nom exact 'cv' comme dans upload.fields()
+        data.append('cvFile', formData.cvFile);
       }
-
-      // Debug: Afficher le contenu de FormData
-      for (let [key, value] of data.entries()) {
-        console.log(key, value);
-      }
-
       if (editingId) {
         const updatedMember = await updateMember(editingId, data);
         setMembers(members.map(m => m.id === editingId ? updatedMember : m));
@@ -241,13 +228,14 @@ const Members = () => {
         });
       }
       
-      // Réinitialisation du formulaire
       setFormData({
         firstName: '', lastName: '', sex: '', location: '', address: '',
         contact: '', profession: '', employmentStructure: '', companyOrProject: '',
         activities: '', role: '', profilePicture: null, profilePictureFileName: '',
         cvFile: null, cvFileName: ''
       });
+      setProfilePictureError('');
+      setCvFileError('');
       e.target.reset();
     } catch (error) {
       console.error('Erreur lors de l\'opération sur le membre:', error);
@@ -263,7 +251,6 @@ const Members = () => {
       setIsSubmitting(false);
     }
   };
-
   const handleProfilePictureChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -299,7 +286,6 @@ const Members = () => {
       setFormData({ ...formData, cvFile: null, cvFileName: '' });
     }
   };
-
   const handleEdit = (member) => {
     setEditingId(member.id);
     setFormData({
@@ -321,7 +307,6 @@ const Members = () => {
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
   const filteredMembers = useMemo(() => {
     return members.filter(member => {
       const fullName = `${member.first_name || ''} ${member.last_name || ''}`.toLowerCase();
@@ -333,18 +318,14 @@ const Members = () => {
                           (member.employment_structure || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (member.company_or_project || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (member.activities || '').toLowerCase().includes(searchTerm.toLowerCase());
-
       const matchesRole = filterRole === 'all' || (member.role || '').toLowerCase() === filterRole.toLowerCase();
       const matchesProfession = filterProfession === 'all' || (member.profession || '').toLowerCase() === filterProfession.toLowerCase();
-
       return matchesSearch && matchesRole && matchesProfession;
     });
   }, [members, searchTerm, filterRole, filterProfession]);
-
   const executiveBureau = useMemo(() => filteredMembers.filter(m => m.role === 'Bureau Exécutif'), [filteredMembers]);
   const adhocCommittee = useMemo(() => filteredMembers.filter(m => m.role === 'Comité Adhoc'), [filteredMembers]);
   const regularMembers = useMemo(() => filteredMembers.filter(m => m.role === 'Membre'), [filteredMembers]);
-
   const genderData = useMemo(() => ({
     labels: ['Hommes', 'Femmes'],
     datasets: [{
@@ -357,7 +338,6 @@ const Members = () => {
       borderWidth: 1,
     }]
   }), [members]);
-
   const professionChartData = useMemo(() => {
     const professionCounts = members.reduce((acc, member) => {
       if (member.profession) {
@@ -365,7 +345,6 @@ const Members = () => {
       }
       return acc;
     }, {});
-
     return {
       labels: Object.keys(professionCounts),
       datasets: [{
@@ -385,7 +364,6 @@ const Members = () => {
       }]
     };
   }, [members]);
-
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
       {modalState.isOpen && (
@@ -398,7 +376,7 @@ const Members = () => {
           isError={modalState.isError}
         />
       )}
-
+      {/* Titre principal avec animation */}
       <motion.h1 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -408,7 +386,7 @@ const Members = () => {
         <FiUsers className="mr-3" />
         Gestion des Membres
       </motion.h1>
-
+      {/* Formulaire d'ajout/édition */}
       {user?.role === 'admin' && (
         <motion.div 
           initial={{ opacity: 0 }}
@@ -432,9 +410,148 @@ const Members = () => {
           
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-              {/* ... [Tous vos champs de formulaire existants] ... */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Prénom *</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Jean"
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  required
+                />
+              </div>
               
-              {/* Champ pour la photo de profil */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Dupont"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Sexe *</label>
+                <select
+                  value={formData.sex}
+                  onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
+                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+                  required
+                >
+                  <option value="">Sélectionner...</option>
+                  {sexOptions.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Localisation</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FiMapPin className="text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Ex: Yaoundé"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    className="pl-10 border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Rue 123, Quartier"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FiPhone className="text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Téléphone ou Email"
+                    value={formData.contact}
+                    onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
+                    className="pl-10 border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Profession *</label>
+                <select
+                  value={formData.profession}
+                  onChange={(e) => setFormData({ ...formData, profession: e.target.value })}
+                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+                  required
+                >
+                  <option value="">Sélectionner...</option>
+                  {professionOptions.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Structure d'emploi</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Entreprise, Ministère"
+                  value={formData.employmentStructure}
+                  onChange={(e) => setFormData({ ...formData, employmentStructure: e.target.value })}
+                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Entreprise/Projet</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Projet XYZ"
+                  value={formData.companyOrProject}
+                  onChange={(e) => setFormData({ ...formData, companyOrProject: e.target.value })}
+                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Activités</label>
+                <input
+                  type="text"
+                  placeholder="Séparées par des virgules"
+                  value={formData.activities}
+                  onChange={(e) => setFormData({ ...formData, activities: e.target.value })}
+                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Rôle *</label>
+                <select
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+                  required
+                >
+                  <option value="">Sélectionner...</option>
+                  {rolesOptions.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Photo de Profil</label>
                 <label className={`block w-full border ${profilePictureError ? 'border-red-500' : 'border-gray-200'} p-3 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500`}>
@@ -454,8 +571,7 @@ const Members = () => {
                 {profilePictureError && <p className="mt-1 text-sm text-red-600">{profilePictureError}</p>}
                 <p className="mt-1 text-xs text-gray-500">Max. 5MB (JPEG, PNG)</p>
               </div>
-
-              {/* Champ pour le CV */}
+              {/* New field for CV upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">CV</label>
                 <label className={`block w-full border ${cvFileError ? 'border-red-500' : 'border-gray-200'} p-3 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500`}>
@@ -517,7 +633,6 @@ const Members = () => {
           </form>
         </motion.div>
       )}
-
       {/* Barre de recherche et filtres */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -572,7 +687,6 @@ const Members = () => {
           </div>
         </div>
       </motion.div>
-
       {/* Section des Statistiques */}
       <motion.div 
         initial={{ opacity: 0 }}
@@ -645,7 +759,6 @@ const Members = () => {
           </div>
         )}
       </motion.div>
-
       {/* Affichage des membres */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16 bg-white rounded-xl shadow border border-gray-100">
@@ -707,7 +820,6 @@ const Members = () => {
               </div>
             </div>
           )}
-
           {/* Comité Adhoc */}
           {adhocCommittee.length > 0 && (
             <div className="mb-10">
@@ -737,7 +849,6 @@ const Members = () => {
               </div>
             </div>
           )}
-
           {/* Membres */}
           {regularMembers.length > 0 && (
             <div className="mb-10">
@@ -772,5 +883,4 @@ const Members = () => {
     </div>
   );
 };
-
 export default Members;
