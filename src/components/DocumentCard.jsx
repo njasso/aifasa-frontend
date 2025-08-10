@@ -18,18 +18,6 @@ const DocumentCard = ({ document, onDelete }) => {
     }
   };
 
-  // Fonction pour obtenir l'extension du fichier
-  const getFileExtension = (url) => {
-    try {
-      const parts = url.split('.');
-      return parts.length > 1 ? parts.pop() : 'pdf';
-    } catch (e) {
-      return 'pdf';
-    }
-  };
-
-  const suggestedFileName = `${document.title.replace(/[^a-z0-9]/gi, '_')}.${getFileExtension(document.file_url)}`;
-
   return (
     <div className="border rounded-lg p-4 shadow-md bg-white">
       <div className="flex items-center mb-4">
@@ -45,8 +33,8 @@ const DocumentCard = ({ document, onDelete }) => {
       <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
         <a
           href={document.file_url}
-          download={suggestedFileName}
-          className="bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors duration-300 text-center text-sm font-medium flex-grow flex items-center justify-center gap-2"
+          download
+          className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-300 text-center text-sm font-medium flex-grow flex items-center justify-center gap-2"
         >
           <FiDownload />
           Télécharger
