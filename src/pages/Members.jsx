@@ -192,6 +192,8 @@ const Members = () => {
     setIsSubmitting(true);
     
     try {
+      // Correction : Assurez-vous que les propriétés de fichier sont toujours présentes
+      // même si elles sont nulles.
       const dataToSubmit = {
         first_name: formData.firstName,
         last_name: formData.lastName,
@@ -204,15 +206,9 @@ const Members = () => {
         company_or_project: formData.companyOrProject,
         activities: formData.activities,
         role: formData.role,
+        profilePicture: formData.photoFile, // S'assure que la propriété est toujours envoyée
+        cvFile: formData.cvFile, // S'assure que la propriété est toujours envoyée
       };
-
-      // Correction : Assurez-vous d'utiliser 'profilePicture' si c'est ce que le service attend.
-      if (formData.photoFile) {
-        dataToSubmit.profilePicture = formData.photoFile; 
-      }
-      if (formData.cvFile) {
-        dataToSubmit.cvFile = formData.cvFile;
-      }
 
       let result;
       if (editingId) {
