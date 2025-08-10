@@ -53,7 +53,7 @@ const Members = () => {
     companyOrProject: '',
     activities: '',
     role: '',
-    profilePicture: null,
+    photoFile: null, // Renommé 'profilePicture' en 'photoFile'
     profilePictureFileName: '',
     cvFile: null,
     cvFileName: ''
@@ -184,7 +184,7 @@ const Members = () => {
       return;
     }
 
-    if (formData.profilePicture && formData.profilePicture.size > 5 * 1024 * 1024) {
+    if (formData.photoFile && formData.photoFile.size > 5 * 1024 * 1024) { // Utilisation de photoFile
       setProfilePictureError('La photo de profil ne doit pas dépasser 5MB');
       return;
     }
@@ -197,39 +197,33 @@ const Members = () => {
     setIsSubmitting(true);
     
     try {
-      const data = new FormData();
-      
-      // Ajout des champs texte
-      data.append('firstName', formData.firstName);
-      data.append('lastName', formData.lastName);
-      data.append('sex', formData.sex);
-      data.append('location', formData.location);
-      data.append('address', formData.address);
-      data.append('contact', formData.contact);
-      data.append('profession', formData.profession);
-      data.append('employmentStructure', formData.employmentStructure);
-      data.append('companyOrProject', formData.companyOrProject);
-      data.append('activities', formData.activities);
-      data.append('role', formData.role);
+      // Construction de l'objet de données à envoyer
+      const dataToSubmit = {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        sex: formData.sex,
+        location: formData.location,
+        address: formData.address,
+        contact: formData.contact,
+        profession: formData.profession,
+        employment_structure: formData.employmentStructure,
+        company_or_project: formData.companyOrProject,
+        activities: formData.activities,
+        role: formData.role,
+      };
 
-      // Gestion des fichiers
-      if (formData.profilePicture) {
-        data.append('profilePicture', formData.profilePicture);
-      } else if (editingId && existingFiles.photo_url) {
-        data.append('photo_url', existingFiles.photo_url);
-        data.append('public_id', existingFiles.public_id);
+      // Ajout des fichiers seulement s'ils existent
+      if (formData.photoFile) {
+        dataToSubmit.photoFile = formData.photoFile;
       }
-
       if (formData.cvFile) {
-        data.append('cv', formData.cvFile);
-      } else if (editingId && existingFiles.cv_url) {
-        data.append('cv_url', existingFiles.cv_url);
-        data.append('cv_public_id', existingFiles.cv_public_id);
+        dataToSubmit.cvFile = formData.cvFile;
       }
 
+      let result;
       if (editingId) {
-        const updatedMember = await updateMember(editingId, data);
-        setMembers(members.map(m => m.id === editingId ? updatedMember : m));
+        result = await updateMember(editingId, dataToSubmit);
+        setMembers(members.map(m => m.id === editingId ? result : m));
         setEditingId(null);
         setModalState({
           isOpen: true,
@@ -239,8 +233,8 @@ const Members = () => {
           showCancel: false
         });
       } else {
-        const newMember = await createMember(data);
-        setMembers([newMember, ...members]);
+        result = await createMember(dataToSubmit);
+        setMembers([result, ...members]);
         setModalState({
           isOpen: true,
           message: 'Membre ajouté avec succès !',
@@ -254,7 +248,7 @@ const Members = () => {
       setFormData({
         firstName: '', lastName: '', sex: '', location: '', address: '',
         contact: '', profession: '', employmentStructure: '', companyOrProject: '',
-        activities: '', role: '', profilePicture: null, profilePictureFileName: '',
+        activities: '', role: '', photoFile: null, profilePictureFileName: '',
         cvFile: null, cvFileName: ''
       });
       setExistingFiles({
@@ -287,12 +281,12 @@ const Members = () => {
       }
       setFormData({
         ...formData,
-        profilePicture: file,
+        photoFile: file, // Renommé 'profilePicture' en 'photoFile'
         profilePictureFileName: file.name
       });
       setProfilePictureError('');
     } else {
-      setFormData({ ...formData, profilePicture: null, profilePictureFileName: '' });
+      setFormData({ ...formData, photoFile: null, profilePictureFileName: '' });
     }
   };
   
@@ -334,7 +328,7 @@ const Members = () => {
       companyOrProject: member.company_or_project || '',
       activities: member.activities || '',
       role: member.role || '',
-      profilePicture: null,
+      photoFile: null,
       profilePictureFileName: member.photo_url ? 'Fichier existant' : '',
       cvFile: null,
       cvFileName: member.cv_url ? 'Fichier existant' : ''
@@ -449,403 +443,237 @@ const Members = () => {
               </>
             )}
           </h2>
-          
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Prénom *</label>
-                <input
-                  type="text"
-                  placeholder="Ex: Jean"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  required
-                />
+                <input type="text" placeholder="Ex: Jean" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" required />
               </div>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
-                <input
-                  type="text"
-                  placeholder="Ex: Dupont"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  required
-                />
+                <input type="text" placeholder="Ex: Dupont" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" required />
               </div>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Sexe *</label>
-                <select
-                  value={formData.sex}
-                  onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
-                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
-                  required
-                >
+                <select value={formData.sex} onChange={(e) => setFormData({ ...formData, sex: e.target.value })} className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white" required >
                   <option value="">Sélectionner...</option>
                   {sexOptions.map(option => (
                     <option key={option} value={option}>{option}</option>
                   ))}
                 </select>
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Localisation</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <FiMapPin className="text-gray-400" />
                   </div>
-                  <input
-                    type="text"
-                    placeholder="Ex: Yaoundé"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    className="pl-10 border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  />
+                  <input type="text" placeholder="Ex: Yaoundé" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} className="pl-10 border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
                 </div>
               </div>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
-                <input
-                  type="text"
-                  placeholder="Ex: Rue 123, Quartier"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                />
+                <input type="text" placeholder="Ex: Rue 123, Quartier" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
               </div>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Contact</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <FiPhone className="text-gray-400" />
                   </div>
-                  <input
-                    type="text"
-                    placeholder="Téléphone ou Email"
-                    value={formData.contact}
-                    onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
-                    className="pl-10 border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  />
+                  <input type="text" placeholder="Téléphone ou Email" value={formData.contact} onChange={(e) => setFormData({ ...formData, contact: e.target.value })} className="pl-10 border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
                 </div>
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Profession *</label>
-                <select
-                  value={formData.profession}
-                  onChange={(e) => setFormData({ ...formData, profession: e.target.value })}
-                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
-                  required
-                >
+                <select value={formData.profession} onChange={(e) => setFormData({ ...formData, profession: e.target.value })} className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white" required >
                   <option value="">Sélectionner...</option>
                   {professionOptions.map(option => (
                     <option key={option} value={option}>{option}</option>
                   ))}
                 </select>
               </div>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Structure d'emploi</label>
-                <input
-                  type="text"
-                  placeholder="Ex: Entreprise, Ministère"
-                  value={formData.employmentStructure}
-                  onChange={(e) => setFormData({ ...formData, employmentStructure: e.target.value })}
-                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                />
+                <input type="text" placeholder="Ex: Entreprise, Ministère" value={formData.employmentStructure} onChange={(e) => setFormData({ ...formData, employmentStructure: e.target.value })} className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
               </div>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Entreprise/Projet</label>
-                <input
-                  type="text"
-                  placeholder="Ex: Projet XYZ"
-                  value={formData.companyOrProject}
-                  onChange={(e) => setFormData({ ...formData, companyOrProject: e.target.value })}
-                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                />
+                <input type="text" placeholder="Ex: Projet XYZ" value={formData.companyOrProject} onChange={(e) => setFormData({ ...formData, companyOrProject: e.target.value })} className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Activités</label>
-                <input
-                  type="text"
-                  placeholder="Séparées par des virgules"
-                  value={formData.activities}
-                  onChange={(e) => setFormData({ ...formData, activities: e.target.value })}
-                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                />
+                <input type="text" placeholder="Séparées par des virgules" value={formData.activities} onChange={(e) => setFormData({ ...formData, activities: e.target.value })} className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
               </div>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Rôle *</label>
-                <select
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
-                  required
-                >
+                <select value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })} className="border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white" required >
                   <option value="">Sélectionner...</option>
                   {rolesOptions.map(option => (
                     <option key={option} value={option}>{option}</option>
                   ))}
                 </select>
               </div>
-              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Photo de Profil</label>
-                <label className={`block w-full border ${profilePictureError ? 'border-red-500' : 'border-gray-200'} p-3 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500`}>
-                  <div className="flex items-center justify-between">
-                    <span className={`truncate ${formData.profilePictureFileName ? 'text-gray-800' : 'text-gray-500'}`}>
-                      {formData.profilePictureFileName || "Choisir un fichier..."}
-                    </span>
-                    <FiUpload className="text-emerald-600" />
-                  </div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Photo de profil</label>
+                <div className="relative">
                   <input
                     type="file"
-                    onChange={handleProfilePictureChange}
-                    className="hidden"
                     accept="image/*"
+                    onChange={handleProfilePictureChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
-                </label>
-                {profilePictureError && <p className="mt-1 text-sm text-red-600">{profilePictureError}</p>}
-                <p className="mt-1 text-xs text-gray-500">Max. 5MB (JPEG, PNG)</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">CV</label>
-                <label className={`block w-full border ${cvFileError ? 'border-red-500' : 'border-gray-200'} p-3 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500`}>
-                  <div className="flex items-center justify-between">
-                    <span className={`truncate ${formData.cvFileName ? 'text-gray-800' : 'text-gray-500'}`}>
-                      {formData.cvFileName || "Choisir un fichier..."}
+                  <div className="flex items-center justify-between border border-gray-200 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <span className="truncate text-gray-500">
+                      {formData.profilePictureFileName || 'Cliquez pour uploader'}
                     </span>
-                    <FiFileText className="text-emerald-600" />
+                    <FiUpload className="text-gray-400 flex-shrink-0 ml-2" />
                   </div>
+                </div>
+                {profilePictureError && <p className="mt-1 text-red-500 text-sm">{profilePictureError}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Fichier CV</label>
+                <div className="relative">
                   <input
                     type="file"
+                    accept="application/pdf"
                     onChange={handleCvFileChange}
-                    className="hidden"
-                    accept=".pdf,.doc,.docx"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
-                </label>
-                {cvFileError && <p className="mt-1 text-sm text-red-600">{cvFileError}</p>}
-                <p className="mt-1 text-xs text-gray-500">Max. 10MB (PDF, DOC, DOCX)</p>
+                  <div className="flex items-center justify-between border border-gray-200 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <span className="truncate text-gray-500">
+                      {formData.cvFileName || 'Cliquez pour uploader'}
+                    </span>
+                    <FiFileText className="text-gray-400 flex-shrink-0 ml-2" />
+                  </div>
+                </div>
+                {cvFileError && <p className="mt-1 text-red-500 text-sm">{cvFileError}</p>}
               </div>
             </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button
+            <div className="flex space-x-4">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={isSubmitting}
-                className={`flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-300 shadow-md flex items-center justify-center ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                className={`flex-grow px-6 py-3 rounded-lg text-white font-semibold transition-colors shadow-md ${isSubmitting ? 'bg-emerald-300' : 'bg-emerald-600 hover:bg-emerald-700'}`}
               >
                 {isSubmitting ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <div className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    {editingId ? 'Mise à jour...' : 'Enregistrement...'}
-                  </>
+                    Sauvegarde en cours...
+                  </div>
+                ) : editingId ? (
+                  'Mettre à jour le membre'
                 ) : (
-                  editingId ? 'Mettre à jour' : 'Ajouter Membre'
+                  'Ajouter le membre'
                 )}
-              </button>
-              
+              </motion.button>
               {editingId && (
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   type="button"
                   onClick={() => {
                     setEditingId(null);
                     setFormData({
                       firstName: '', lastName: '', sex: '', location: '', address: '',
                       contact: '', profession: '', employmentStructure: '', companyOrProject: '',
-                      activities: '', role: '', profilePicture: null, profilePictureFileName: '',
+                      activities: '', role: '', photoFile: null, profilePictureFileName: '',
                       cvFile: null, cvFileName: ''
                     });
                     setExistingFiles({
-                      photo_url: null,
-                      public_id: null,
-                      cv_url: null,
-                      cv_public_id: null
+                      photo_url: null, public_id: null, cv_url: null, cv_public_id: null
                     });
                   }}
-                  className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-300 shadow-md"
+                  className="px-6 py-3 rounded-lg text-gray-700 font-semibold bg-gray-200 hover:bg-gray-300 transition-colors shadow-md"
                 >
                   Annuler
-                </button>
+                </motion.button>
               )}
             </div>
           </form>
         </motion.div>
       )}
 
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="bg-white shadow-lg rounded-xl p-6 mb-8 border border-gray-100"
-      >
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-grow">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FiSearch className="text-gray-400" />
-            </div>
-            <input
-              type="text"
-              placeholder="Rechercher par nom, profession, localisation..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            />
-          </div>
-          
-          <div className="relative w-full sm:w-64">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FiUser className="text-gray-400" />
-            </div>
-            <select
-              value={filterRole}
-              onChange={(e) => setFilterRole(e.target.value)}
-              className="pl-10 border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 appearance-none bg-white"
-            >
-              <option value="all">Tous les rôles</option>
-              {rolesOptions.map(option => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="relative w-full sm:w-64">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FiUser className="text-gray-400" />
-            </div>
-            <select
-              value={filterProfession}
-              onChange={(e) => setFilterProfession(e.target.value)}
-              className="pl-10 border border-gray-200 p-3 rounded-lg w-full focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 appearance-none bg-white"
-            >
-              <option value="all">Toutes les professions</option>
-              {professionOptions.map(option => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </motion.div>
-
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        className="bg-white shadow-lg rounded-xl p-6 mb-8 border border-gray-100"
-      >
-        <h2 className="text-2xl font-bold mb-6 text-emerald-800 flex items-center">
-          <FiUser className="mr-2" />
-          Statistiques des Membres
-        </h2>
-        
-        {members.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-4 text-center">Répartition Hommes / Femmes</h3>
-              <div className="mx-auto w-3/4 md:w-full max-w-sm">
-                <Pie 
-                  data={genderData} 
-                  options={{ 
-                    responsive: true, 
-                    plugins: { 
-                      legend: { position: 'bottom' },
-                      tooltip: {
-                        callbacks: {
-                          label: function(context) {
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const value = context.raw;
-                            const percentage = Math.round((value / total) * 100);
-                            return `${context.label}: ${value} (${percentage}%)`;
-                          }
-                        }
-                      }
-                    } 
-                  }} 
-                />
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-4 text-center">Membres par Profession</h3>
-              <div className="mx-auto w-full max-w-md">
-                <Bar 
-                  data={professionChartData} 
-                  options={{ 
-                    responsive: true, 
-                    plugins: { 
-                      legend: { display: false },
-                      title: {
-                        display: false
-                      }
-                    },
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                        ticks: {
-                          precision: 0
-                        }
-                      }
-                    }
-                  }} 
-                />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center py-8 bg-gray-50 rounded-lg">
-            <FiUser className="mx-auto text-4xl text-gray-400 mb-3" />
-            <p className="text-gray-600">Aucune donnée de membre pour les statistiques</p>
-          </div>
-        )}
-      </motion.div>
-
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-16 bg-white rounded-xl shadow border border-gray-100">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500 mb-4"></div>
-          <p className="text-gray-600">Chargement des membres...</p>
-        </div>
-      ) : filteredMembers.length === 0 ? (
-        <motion.div 
+        <div className="text-center py-20 text-gray-500 text-lg">Chargement des membres...</div>
+      ) : (
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center py-16 bg-white rounded-xl shadow border border-gray-100"
+          transition={{ delay: 0.4 }}
         >
-          <FiSearch className="mx-auto text-4xl text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-700 mb-2">Aucun membre trouvé</h3>
-          <p className="text-gray-500">
-            {searchTerm || filterRole !== 'all' || filterProfession !== 'all' 
-              ? "Essayez de modifier vos critères de recherche ou de filtre."
-              : "Aucun membre n'a été enregistré pour le moment."}
-          </p>
-        </motion.div>
-      ) : (
-        <motion.div 
-          initial="hidden"
-          animate="visible"
-          variants={{
-            visible: {
-              transition: {
-                staggerChildren: 0.1
-              }
-            }
-          }}
-        >
+          <div className="bg-white shadow-lg rounded-xl p-6 mb-8 border border-gray-100 flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
+            <div className="flex items-center space-x-4 w-full md:w-auto">
+              <div className="relative flex-grow">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiSearch className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Rechercher un membre..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg w-full md:w-64 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                />
+              </div>
+            </div>
+            <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4 w-full md:w-auto">
+              <select
+                value={filterRole}
+                onChange={(e) => setFilterRole(e.target.value)}
+                className="border border-gray-200 p-2 rounded-lg w-full md:w-48 bg-white"
+              >
+                <option value="all">Tous les rôles</option>
+                {rolesOptions.map(role => (
+                  <option key={role} value={role}>{role}</option>
+                ))}
+              </select>
+              <select
+                value={filterProfession}
+                onChange={(e) => setFilterProfession(e.target.value)}
+                className="border border-gray-200 p-2 rounded-lg w-full md:w-48 bg-white"
+              >
+                <option value="all">Toutes les professions</option>
+                {professionOptions.map(prof => (
+                  <option key={prof} value={prof}>{prof}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div className="bg-white shadow-lg rounded-xl p-6 border border-gray-100">
+              <h3 className="text-xl font-bold mb-4 text-gray-800">Répartition par Sexe</h3>
+              <div className="h-64 flex items-center justify-center">
+                {members.length > 0 ? (
+                  <Pie data={genderData} options={{ maintainAspectRatio: false, responsive: true }} />
+                ) : (
+                  <p className="text-gray-500">Pas de données</p>
+                )}
+              </div>
+            </div>
+            <div className="bg-white shadow-lg rounded-xl p-6 border border-gray-100">
+              <h3 className="text-xl font-bold mb-4 text-gray-800">Membres par Profession</h3>
+              <div className="h-64 flex items-center justify-center">
+                {members.length > 0 ? (
+                  <Bar data={professionChartData} options={{ maintainAspectRatio: false, responsive: true }} />
+                ) : (
+                  <p className="text-gray-500">Pas de données</p>
+                )}
+              </div>
+            </div>
+          </div>
+
           {executiveBureau.length > 0 && (
             <div className="mb-10">
               <h2 className="text-2xl font-bold mb-6 text-emerald-800 border-b-2 pb-2 border-emerald-600 flex items-center">
-                <FiUser className="mr-2" />
+                <FiUsers className="mr-2" />
                 Bureau Exécutif
                 <span className="ml-auto text-sm font-normal bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">
                   {executiveBureau.length} membre{executiveBureau.length > 1 ? 's' : ''}
@@ -874,7 +702,7 @@ const Members = () => {
           {adhocCommittee.length > 0 && (
             <div className="mb-10">
               <h2 className="text-2xl font-bold mb-6 text-emerald-800 border-b-2 pb-2 border-emerald-600 flex items-center">
-                <FiUser className="mr-2" />
+                <FiUsers className="mr-2" />
                 Comité Adhoc
                 <span className="ml-auto text-sm font-normal bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">
                   {adhocCommittee.length} membre{adhocCommittee.length > 1 ? 's' : ''}
