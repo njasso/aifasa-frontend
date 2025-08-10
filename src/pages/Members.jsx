@@ -59,14 +59,6 @@ const Members = () => {
     cvFileName: ''
   });
   
-  // existingFiles a été supprimé car il n'était plus utilisé
-  // const [existingFiles, setExistingFiles] = useState({
-  //   photo_url: null,
-  //   public_id: null,
-  //   cv_url: null,
-  //   cv_public_id: null
-  // });
-
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -214,8 +206,9 @@ const Members = () => {
         role: formData.role,
       };
 
+      // Correction : Assurez-vous d'utiliser 'profilePicture' si c'est ce que le service attend.
       if (formData.photoFile) {
-        dataToSubmit.photoFile = formData.photoFile;
+        dataToSubmit.profilePicture = formData.photoFile; 
       }
       if (formData.cvFile) {
         dataToSubmit.cvFile = formData.cvFile;
