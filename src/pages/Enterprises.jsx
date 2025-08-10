@@ -6,8 +6,9 @@ const enterprisesData = [
   {
     id: 1,
     name: 'Ferme Piscicole "AfricaNut Fish Market"',
-    logo: 'https://placehold.co/100x100/1e40af/ffffff?text=Logo',
-    image: 'https://placehold.co/600x400/93c5fd/1e40af?text=Ferme+Piscicole',
+    // URLs fournies par Cloudinary
+    logo: 'https://res.cloudinary.com/djhyztec8/image/fetch/v1754811262/https://harmonious-boba-e7278d.netlify.app/cld-assets/images/partners/AFRICANUT_FISH_MARKET.png',
+    image: 'https://res.cloudinary.com/djhyztec8/image/upload/v1754812663/WhatsApp_Image_2024-10-08_%C3%A0_11.42.46_edf79ff4_cmppa6.jpg',
     activity: 'Élevage et vente de poissons d\'eau douce (silure, tilapia, carpe).',
     products: 'Silure, tilapia frais, filets de poisson, alevins.',
     production: 'Production annuelle de 50 tonnes de poisson.',
