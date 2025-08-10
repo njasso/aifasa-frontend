@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getDocuments, createDocument } from '../services/documentService';
 import { motion } from 'framer-motion';
-import { FiUpload, FiSearch, FiFilter, FiFileText, FiPlus, FiTrash2, FiEye } from 'react-icons/fi';
+import { FiUpload, FiSearch, FiFilter, FiFileText, FiPlus, FiTrash2 } from 'react-icons/fi';
 import Modal from '../components/Modal';
 
 const Documents = () => {
@@ -14,8 +14,6 @@ const Documents = () => {
   const [filterType, setFilterType] = useState('all');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fileError, setFileError] = useState('');
-  const [showPdfModal, setShowPdfModal] = useState(false);
-  const [pdfUrlToPreview, setPdfUrlToPreview] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
 
   // Animations
@@ -84,11 +82,6 @@ const Documents = () => {
       setFormData({ ...formData, file, fileName: file.name });
       setFileError('');
     }
-  };
-
-  const handlePreview = (url) => {
-    setPdfUrlToPreview(url);
-    setShowPdfModal(true);
   };
 
   const handleDelete = (id) => {
@@ -256,11 +249,18 @@ const Documents = () => {
                 <p className="text-sm text-gray-500 capitalize">{doc.type}</p>
               </div>
               <div className="flex items-center justify-between p-3 border-t border-gray-100">
-                <button onClick={() => handlePreview(doc.fileUrl)} className="text-emerald-600 hover:text-emerald-800 flex items-center">
-                  <FiEye className="mr-1" /> Voir
-                </button>
+                <a
+                  href={doc.fileUrl}
+                  download
+                  className="text-emerald-600 hover:text-emerald-800 flex items-center"
+                >
+                  <FiUpload className="mr-1" /> Télécharger
+                </a>
                 {user?.role === 'admin' && (
-                  <button onClick={() => handleDelete(doc.id)} className="text-red-600 hover:text-red-800 flex items-center">
+                  <button
+                    onClick={() => handleDelete(doc.id)}
+                    className="text-red-600 hover:text-red-800 flex items-center"
+                  >
                     <FiTrash2 className="mr-1" /> Supprimer
                   </button>
                 )}
@@ -269,17 +269,6 @@ const Documents = () => {
           ))}
         </motion.div>
       )}
-
-      {/* Modal PDF */}
-      <Modal isOpen={showPdfModal} onClose={() => setShowPdfModal(false)} title="Prévisualisation">
-        <div className="h-[80vh]">
-          {pdfUrlToPreview ? (
-            <iframe src={pdfUrlToPreview} className="w-full h-full border-none" title="Aperçu PDF"></iframe>
-          ) : (
-            <p>Chargement...</p>
-          )}
-        </div>
-      </Modal>
 
       {/* Modal alerte */}
       {alertMessage && (
