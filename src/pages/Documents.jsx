@@ -3,7 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { getDocuments, createDocument } from '../services/documentService';
 import DocumentCard from '../components/DocumentCard';
 import { motion } from 'framer-motion';
-import { FiUpload, FiSearch, FiFilter, FiFileText, FiPlus } from 'react-icons/fi';
+import { FiUpload, FiSearch, FiFilter, FiFileText, FiPlus, FiX } from 'react-icons/fi';
+import Modal from '../components/Modal'; // Assuming a Modal component exists
 
 const Documents = () => {
   const { user } = useAuth();
@@ -19,6 +20,9 @@ const Documents = () => {
   const [filterType, setFilterType] = useState('all');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fileError, setFileError] = useState('');
+  const [showPdfModal, setShowPdfModal] = useState(false);
+  const [pdfUrlToPreview, setPdfUrlToPreview] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
 
   // Animation variants
   const cardVariants = {
@@ -49,9 +53,14 @@ const Documents = () => {
       setFileError('Veuillez sélectionner un fichier');
       return;
     }
+    
+    if (formData.file.type !== 'application/pdf') {
+      setFileError('Seuls les fichiers PDF sont acceptés.');
+      return;
+    }
 
     if (!formData.title.trim() || !formData.type.trim()) {
-      alert('Veuillez remplir tous les champs de texte.');
+      setAlertMessage('Veuillez remplir tous les champs de texte.');
       return;
     }
 
@@ -69,7 +78,7 @@ const Documents = () => {
       e.target.reset();
     } catch (error) {
       console.error('Erreur lors de l\'ajout du document:', error);
-      alert(`Échec de l'ajout du document: ${error.message || 'Erreur inconnue'}`);
+      setAlertMessage(`Échec de l'ajout du document: ${error.message || 'Erreur inconnue'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -91,7 +100,14 @@ const Documents = () => {
     }
   };
 
+  const handlePreview = (url) => {
+    setPdfUrlToPreview(url);
+    setShowPdfModal(true);
+  };
+
   const handleDelete = (id) => {
+    // Implement delete functionality
+    console.log(`Deleting document with ID: ${id}`);
     setDocuments(documents.filter((doc) => doc.id !== id));
   };
 
@@ -161,7 +177,7 @@ const Documents = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Fichier</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Fichier (PDF uniquement)</label>
                 <label className={`block w-full border ${fileError ? 'border-red-500' : 'border-gray-200'} p-3 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500`}>
                   <div className="flex items-center justify-between">
                     <span className={`truncate ${formData.fileName ? 'text-gray-800' : 'text-gray-500'}`}>
@@ -173,6 +189,7 @@ const Documents = () => {
                     type="file"
                     onChange={handleFileChange}
                     className="hidden"
+                    accept="application/pdf"
                     required
                   />
                 </label>
@@ -284,10 +301,42 @@ const Documents = () => {
                 document={doc} 
                 onDelete={handleDelete} 
                 userRole={user?.role} 
+                onPreview={handlePreview}
               />
             </motion.div>
           ))}
         </motion.div>
+      )}
+      
+      {/* Modal pour la prévisualisation du PDF */}
+      <Modal 
+        isOpen={showPdfModal} 
+        onClose={() => setShowPdfModal(false)} 
+        title="Prévisualisation du Document"
+        size="lg" // Utilisez une grande taille pour le PDF
+      >
+        <div className="h-[80vh]">
+          {pdfUrlToPreview ? (
+            <iframe 
+              src={pdfUrlToPreview} 
+              className="w-full h-full border-none"
+              title="Aperçu du PDF"
+            ></iframe>
+          ) : (
+            <p>Chargement du document...</p>
+          )}
+        </div>
+      </Modal>
+
+      {/* Modal d'alerte pour les messages */}
+      {alertMessage && (
+        <Modal 
+          isOpen={!!alertMessage} 
+          onClose={() => setAlertMessage('')} 
+          title="Erreur" 
+        >
+          <p className="text-center text-red-600">{alertMessage}</p>
+        </Modal>
       )}
     </div>
   );
