@@ -1,108 +1,236 @@
-// Le module 'api' est importé pour les communications avec le backend.
-import api from './api';
+const express = require('express');
+const router = express.Router();
+const Member = require('../models/Member');
+const authenticateToken = require('../middleware/auth');
+const cloudinary = require('../config/cloudinary');
+const multer = require('multer');
+const fs = require('fs').promises;
+
+// Configuration de Multer pour le stockage temporaire
+const upload = multer({ dest: 'uploads/' });
 
 /**
- * Récupère la liste de tous les membres depuis l'API.
- * @returns {Promise<Array>} Une promesse qui résout en un tableau d'objets membres.
- * @throws {Error} Lance une erreur si l'appel API échoue.
+ * Nettoie les fichiers temporaires après l'upload, qu'il y ait une erreur ou non.
+ * @param {Array<object>} files - Les fichiers à supprimer.
  */
-export const getMembers = async () => {
-  try {
-    const response = await api.get('/members');
-    return response.data;
-  } catch (error) {
-    console.error('Failed to fetch members:', error);
-    throw error;
+const cleanUpTempFiles = async (files) => {
+  if (files) {
+    const filesToClean = [
+      ...(files.profilePicture || []),
+      ...(files.cv || [])
+    ];
+    await Promise.all(filesToClean.map(file => fs.unlink(file.path).catch(e => console.error("Erreur lors de la suppression du fichier temporaire:", e))));
   }
 };
 
-/**
- * Crée un nouveau membre avec les données fournies.
- * Gère l'envoi des fichiers de CV et de photo de profil au backend.
- * @param {object} data Données du membre à créer, incluant potentiellement des fichiers.
- * @returns {Promise<object>} Le membre créé.
- * @throws {Error} Lance une erreur si l'appel API échoue.
- */
-export const createMember = async (data) => {
+// Route pour récupérer tous les membres
+router.get('/', async (req, res) => {
   try {
-    const formData = new FormData();
-    // Ajout de tous les champs de données non-fichiers
-    for (const key in data) {
-      if (key !== 'photoFile' && key !== 'cvFile') {
-        formData.append(key, data[key]);
+    const members = await Member.findAll();
+    res.json(members);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des membres:', error.message);
+    res.status(500).json({ error: 'Erreur serveur lors de la récupération des membres', details: error.message });
+  }
+});
+
+// Route pour ajouter un nouveau membre
+router.post(
+  '/',
+  authenticateToken,
+  upload.fields([
+    { name: 'profilePicture', maxCount: 1 },
+    { name: 'cv', maxCount: 1 }
+  ]),
+  async (req, res) => {
+    // Nettoyer les fichiers temporaires en cas d'accès interdit
+    if (req.user.role !== 'admin') {
+      await cleanUpTempFiles(req.files);
+      return res.status(403).json({ error: 'Accès interdit' });
+    }
+
+    const {
+      firstName, lastName, sex, location, address, contact,
+      profession, employmentStructure, companyOrProject, activities, role,
+      is_new_member, last_annual_inscription_date, has_paid_adhesion,
+      social_contribution_status, tontine_status, ag_absence_count
+    } = req.body;
+
+    const profilePictureFile = req.files.profilePicture ? req.files.profilePicture[0] : null;
+    const cvFile = req.files.cv ? req.files.cv[0] : null;
+
+    let photo_url = null;
+    let public_id = null;
+    let cv_url = null;
+    let cv_public_id = null;
+
+    try {
+      // Validation du fichier CV
+      if (cvFile && cvFile.mimetype !== 'application/pdf') {
+        throw new Error('Le CV doit être un fichier PDF.');
       }
-    }
-    // Ajout des fichiers de photo et de CV si ils existent
-    if (data.photoFile) {
-      formData.append('profilePicture', data.photoFile);
-    }
-    if (data.cvFile) {
-      formData.append('cv', data.cvFile);
-    }
 
-    // Le backend reçoit le FormData avec les fichiers et les champs textuels.
-    const response = await api.post('/members', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Failed to create member:', error);
-    throw error;
-  }
-};
-
-/**
- * Met à jour un membre existant.
- * Gère l'envoi des fichiers de CV et de photo de profil au backend.
- * @param {string|number} id Identifiant du membre.
- * @param {object} data Données mises à jour, incluant potentiellement des fichiers.
- * @returns {Promise<object>} Le membre mis à jour.
- * @throws {Error} Lance une erreur si l'appel API échoue.
- */
-export const updateMember = async (id, data) => {
-  try {
-    const formData = new FormData();
-    // Ajout des champs existants et des nouveaux champs textuels
-    for (const key in data) {
-      if (key !== 'photoFile' && key !== 'cvFile') {
-        formData.append(key, data[key]);
+      if (profilePictureFile) {
+        const result = await cloudinary.uploader.upload(profilePictureFile.path, {
+          folder: 'aifasa_members_profiles',
+          resource_type: 'image'
+        });
+        photo_url = result.secure_url;
+        public_id = result.public_id;
       }
-    }
-    // Ajout des fichiers de photo et de CV si ils existent
-    if (data.photoFile) {
-      formData.append('profilePicture', data.photoFile);
-    }
-    if (data.cvFile) {
-      formData.append('cv', data.cvFile);
-    }
-    
-    // Le backend reçoit le FormData avec les fichiers et les champs textuels.
-    const response = await api.put(`/members/${id}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Failed to update member:', error);
-    throw error;
-  }
-};
 
-/**
- * Supprime un membre par son identifiant.
- * @param {string|number} id Identifiant du membre à supprimer.
- * @returns {Promise<object>} Réponse de l'API après suppression.
- * @throws {Error} Lance une erreur si l'appel API échoue.
- */
-export const deleteMember = async (id) => {
-  try {
-    const response = await api.delete(`/members/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error('Failed to delete member:', error);
-    throw error;
+      if (cvFile) {
+        const result = await cloudinary.uploader.upload(cvFile.path, {
+          folder: 'aifasa_members_cvs',
+          resource_type: 'raw',
+          // Ajoute l'extension .pdf au public_id pour une meilleure gestion
+          public_id: `${cvFile.filename}.pdf`
+        });
+        cv_url = result.secure_url;
+        cv_public_id = result.public_id;
+      }
+
+      const member = await Member.create({
+        firstName, lastName, sex, location, address, contact,
+        profession, employmentStructure, companyOrProject, activities, role,
+        photo_url, public_id, cv_url, cv_public_id,
+        is_new_member: is_new_member === 'true',
+        last_annual_inscription_date: last_annual_inscription_date || null,
+        has_paid_adhesion: has_paid_adhesion === 'true',
+        social_contribution_status: social_contribution_status ? JSON.parse(social_contribution_status) : {},
+        tontine_status: tontine_status ? JSON.parse(tontine_status) : {},
+        ag_absence_count: parseInt(ag_absence_count, 10) || 0
+      });
+
+      res.status(201).json(member);
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du membre:', error.message);
+      res.status(500).json({ error: 'Erreur serveur lors de l\'ajout du membre', details: error.message });
+    } finally {
+      await cleanUpTempFiles(req.files);
+    }
   }
-};
+);
+
+// Route pour mettre à jour un membre
+router.put(
+  '/:id',
+  authenticateToken,
+  upload.fields([
+    { name: 'profilePicture', maxCount: 1 },
+    { name: 'cv', maxCount: 1 }
+  ]),
+  async (req, res) => {
+    // Nettoyer les fichiers temporaires en cas d'accès interdit
+    if (req.user.role !== 'admin') {
+      await cleanUpTempFiles(req.files);
+      return res.status(403).json({ error: 'Accès interdit' });
+    }
+
+    const memberId = req.params.id;
+    const {
+      firstName, lastName, sex, location, address, contact,
+      profession, employmentStructure, companyOrProject, activities, role,
+      photo_url: existing_photo_url, public_id: existing_public_id,
+      cv_url: existing_cv_url, cv_public_id: existing_cv_public_id,
+      is_new_member, last_annual_inscription_date, has_paid_adhesion,
+      social_contribution_status, tontine_status, ag_absence_count
+    } = req.body;
+
+    let photo_url = existing_photo_url;
+    let public_id = existing_public_id;
+    let cv_url = existing_cv_url;
+    let cv_public_id = existing_cv_public_id;
+
+    try {
+      const profilePictureFile = req.files.profilePicture ? req.files.profilePicture[0] : null;
+      const cvFile = req.files.cv ? req.files.cv[0] : null;
+
+      // Validation du fichier CV
+      if (cvFile && cvFile.mimetype !== 'application/pdf') {
+        throw new Error('Le CV doit être un fichier PDF.');
+      }
+
+      if (profilePictureFile) {
+        if (existing_public_id) {
+          await cloudinary.uploader.destroy(existing_public_id).catch(e => console.error("Erreur suppression ancienne photo Cloudinary:", e));
+        }
+        const result = await cloudinary.uploader.upload(profilePictureFile.path, {
+          folder: 'aifasa_members_profiles',
+          resource_type: 'image'
+        });
+        photo_url = result.secure_url;
+        public_id = result.public_id;
+      }
+
+      if (cvFile) {
+        if (existing_cv_public_id) {
+          await cloudinary.uploader.destroy(existing_cv_public_id, { resource_type: 'raw' }).catch(e => console.error("Erreur suppression ancien CV Cloudinary:", e));
+        }
+        const result = await cloudinary.uploader.upload(cvFile.path, {
+          folder: 'aifasa_members_cvs',
+          resource_type: 'raw',
+          // Ajoute l'extension .pdf au public_id pour une meilleure gestion
+          public_id: `${cvFile.filename}.pdf`
+        });
+        cv_url = result.secure_url;
+        cv_public_id = result.public_id;
+      }
+
+      const member = await Member.update(memberId, {
+        firstName, lastName, sex, location, address, contact,
+        profession, employmentStructure, companyOrProject, activities, role,
+        photo_url, public_id, cv_url, cv_public_id,
+        is_new_member: is_new_member === 'true',
+        last_annual_inscription_date: last_annual_inscription_date || null,
+        has_paid_adhesion: has_paid_adhesion === 'true',
+        social_contribution_status: social_contribution_status ? JSON.parse(social_contribution_status) : {},
+        tontine_status: tontine_status ? JSON.parse(tontine_status) : {},
+        ag_absence_count: parseInt(ag_absence_count, 10) || 0
+      });
+
+      if (!member) {
+        return res.status(404).json({ error: 'Membre non trouvé' });
+      }
+
+      res.json(member);
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du membre:', error.message);
+      res.status(500).json({ error: 'Erreur serveur lors de la mise à jour du membre', details: error.message });
+    } finally {
+      await cleanUpTempFiles(req.files);
+    }
+  }
+);
+
+// Route pour supprimer un membre
+router.delete('/:id', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Accès interdit' });
+  }
+
+  try {
+    const memberId = req.params.id;
+    const member = await Member.findById(memberId);
+
+    if (!member) {
+      return res.status(404).json({ error: 'Membre non trouvé' });
+    }
+
+    if (member.public_id) {
+      await cloudinary.uploader.destroy(member.public_id);
+    }
+
+    if (member.cv_public_id) {
+      await cloudinary.uploader.destroy(member.cv_public_id, { resource_type: 'raw' });
+    }
+
+    await Member.delete(memberId);
+    res.status(204).send();
+  } catch (error) {
+    console.error('Erreur lors de la suppression du membre:', error.message);
+    res.status(500).json({ error: 'Erreur serveur lors de la suppression du membre', details: error.message });
+  }
+});
+
+module.exports = router;
