@@ -14,22 +14,17 @@ import {
 } from 'react-icons/fi';
 
 const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
-  // Utilisation de la propriété 'photo_url' et d'un fallback pour la photo de profil
   const profilePictureUrl =
     member.photo_url ||
     `https://ui-avatars.com/api/?name=${member.first_name}+${member.last_name}&background=10b981&color=fff&bold=true`;
   const isAdmin = userRole === 'admin';
 
-  // Fonction pour extraire le nom de fichier suggéré pour le CV
   const getSuggestedCvFileName = (url, memberName) => {
     try {
-      // Si l'URL contient déjà un nom de fichier valide
       if (url.includes('/')) {
         const filename = url.split('/').pop();
         if (filename.includes('.')) return filename;
       }
-      
-      // Sinon générer un nom basé sur le membre
       const safeName = memberName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
       return `cv_${safeName}.pdf`;
     } catch (e) {
@@ -41,8 +36,11 @@ const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
     ? getSuggestedCvFileName(member.cv_url, `${member.first_name}_${member.last_name}`)
     : '';
 
-  // Vérifie si le CV est un PDF (pour déterminer s'il peut être affiché en iframe)
-  const isPdf = member.cv_url?.toLowerCase().endsWith('.pdf');
+  // NOUVEAU: Crée une URL avec l'extension .pdf pour l'affichage
+  const cvUrlWithExtension = member.cv_url ? `${member.cv_url}.pdf` : null;
+
+  // L'URL est maintenant toujours un PDF pour l'iframe
+  const isPdf = member.cv_url ? true : false;
 
   return (
     <motion.div
@@ -126,7 +124,7 @@ const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
                 Curriculum Vitae
               </h4>
               <a
-                href={member.cv_url}
+                href={cvUrlWithExtension}
                 target="_blank"
                 rel="noopener noreferrer"
                 download={suggestedFileName}
@@ -137,10 +135,9 @@ const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
                 Télécharger
               </a>
             </div>
-            
             {isPdf ? (
               <iframe
-                src={member.cv_url}
+                src={cvUrlWithExtension}
                 title={`CV de ${member.first_name} ${member.last_name}`}
                 width="100%"
                 height="300"
@@ -160,7 +157,6 @@ const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
         {/* Section des boutons d'action */}
         {isAdmin && (
           <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-end space-x-2">
-            {/* Bouton d'édition */}
             <button
               onClick={() => onEdit(member)}
               className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
@@ -168,7 +164,6 @@ const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
             >
               <FiEdit2 />
             </button>
-            {/* Bouton de suppression */}
             <button
               onClick={() => onDelete(member.id)}
               className="flex items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
