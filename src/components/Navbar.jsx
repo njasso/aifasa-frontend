@@ -23,10 +23,10 @@ const Navbar = () => {
     ...((user?.role === 'treasurer' || user?.role === 'admin')
       ? [{ to: "/treasury", text: "Trésorerie" }]
       : []),
-    // NOUVELLE CONDITION POUR LE LIEN "PROJETS" : Tous les utilisateurs connectés
+    // Condition pour le lien "PROJETS" : Tous les utilisateurs connectés
     ...(user ? [{ to: "/projects", text: "Projets" }] : []),
-    // NOUVELLE CONDITION POUR LE LIEN "ENTREPRISES" : Tous les utilisateurs connectés
-    ...(user ? [{ to: "/enterprises", text: "Entreprises" }] : []),
+    // Le lien "Entreprises" est maintenant visible pour tous
+    { to: "/enterprises", text: "Entreprises" },
     { to: "/gallery", text: "Galerie" }
   ];
 
