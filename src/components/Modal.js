@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { FiX } from 'react-icons/fi';
 
 const Modal = ({ isOpen, onClose, title, children }) => {
