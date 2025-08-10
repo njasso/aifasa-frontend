@@ -1,59 +1,55 @@
-// Le module 'api' est importé pour les communications avec le backend.
+// Import du module 'api' pour les communications avec le backend.
 import api from './api';
 
+// ***************************************************************
+// REMARQUE IMPORTANTE :
+// Remplacez ces chaînes par les variables d'environnement de votre projet
+// pour des raisons de sécurité. Par exemple :
+// const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+// const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+// ***************************************************************
+const CLOUDINARY_CLOUD_NAME = 'votre_cloud_name';
+const CLOUDINARY_UPLOAD_PRESET = 'votre_upload_preset';
+
 /**
- * Gère l'upload d'un fichier non-image (comme un PDF) vers Cloudinary.
+ * Gère l'upload générique d'un fichier vers Cloudinary.
  * @param {File} file - Le fichier à uploader.
- * @returns {Promise<string>} L'URL du fichier sur Cloudinary.
+ * @param {'image' | 'raw'} resourceType - Le type de ressource ('image' pour les photos, 'raw' pour les fichiers non-médias).
+ * @returns {Promise<string>} L'URL sécurisée du fichier sur Cloudinary.
+ * @throws {Error} Lance une erreur si l'upload échoue.
  */
-const uploadRawFileToCloudinary = async (file) => {
+const uploadToCloudinary = async (file, resourceType) => {
   const formData = new FormData();
   formData.append('file', file);
-  // Remplacez 'votre_upload_preset' par le preset d'upload de votre compte Cloudinary.
-  formData.append('upload_preset', 'votre_upload_preset');
-  // Le type 'raw' est utilisé pour les fichiers non-médias (comme les PDF).
-  formData.append('resource_type', 'raw');
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+  formData.append('resource_type', resourceType);
 
-  // Ces paramètres sont CRUCIAUX pour que le nom de fichier d'origine soit conservé.
-  formData.append('use_filename', true);
-  formData.append('unique_filename', false);
+  // Ces paramètres sont CRUCIAUX pour les uploads 'raw' afin de conserver le nom de fichier d'origine.
+  if (resourceType === 'raw') {
+    formData.append('use_filename', true);
+    formData.append('unique_filename', false);
+  }
 
-  // Remplacez 'votre_cloud_name' par votre nom de cloud Cloudinary.
-  const response = await fetch(
-    `https://api.cloudinary.com/v1_1/votre_cloud_name/raw/upload`,
-    {
+  const endpoint = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`;
+
+  try {
+    const response = await fetch(endpoint, {
       method: 'POST',
       body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error.message || `L'upload Cloudinary a échoué avec le statut ${response.status}`);
     }
-  );
 
-  const data = await response.json();
-  // Retourne l'URL sécurisée du fichier, qui inclut maintenant l'extension.
-  return data.secure_url;
-};
-
-/**
- * Gère l'upload d'une image vers Cloudinary.
- * @param {File} file - L'image à uploader.
- * @returns {Promise<string>} L'URL de l'image sur Cloudinary.
- */
-const uploadImageToCloudinary = async (file) => {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', 'votre_upload_preset');
-  formData.append('resource_type', 'image'); // Type 'image' pour les photos
-
-  // Remplacez 'votre_cloud_name' par votre nom de cloud Cloudinary.
-  const response = await fetch(
-    `https://api.cloudinary.com/v1_1/votre_cloud_name/image/upload`,
-    {
-      method: 'POST',
-      body: formData,
-    }
-  );
-
-  const data = await response.json();
-  return data.secure_url;
+    const data = await response.json();
+    // Retourne l'URL sécurisée du fichier.
+    return data.secure_url;
+  } catch (error) {
+    console.error(`Échec de l'upload du fichier de type '${resourceType}' vers Cloudinary :`, error);
+    throw error;
+  }
 };
 
 /**
@@ -66,7 +62,7 @@ export const getMembers = async () => {
     const response = await api.get('/members');
     return response.data;
   } catch (error) {
-    console.error('Failed to fetch members:', error);
+    console.error('Échec de la récupération des membres :', error);
     throw error;
   }
 };
@@ -81,26 +77,21 @@ export const getMembers = async () => {
 export const createMember = async (data) => {
   try {
     let memberDataToSubmit = { ...data };
-    
-    // Si un fichier de CV est présent, nous l'uploadons d'abord.
+
     if (data.cvFile) {
-      const cvUrl = await uploadRawFileToCloudinary(data.cvFile);
-      memberDataToSubmit.cv_url = cvUrl;
+      memberDataToSubmit.cv_url = await uploadToCloudinary(data.cvFile, 'raw');
       delete memberDataToSubmit.cvFile;
     }
-    
-    // Si un fichier de photo de profil est présent, nous l'uploadons.
+
     if (data.photoFile) {
-      const photoUrl = await uploadImageToCloudinary(data.photoFile);
-      memberDataToSubmit.photo_url = photoUrl;
+      memberDataToSubmit.photo_url = await uploadToCloudinary(data.photoFile, 'image');
       delete memberDataToSubmit.photoFile;
     }
 
-    // Le backend reçoit l'URL du CV et de la photo au lieu des fichiers bruts.
     const response = await api.post('/members', memberDataToSubmit);
     return response.data;
   } catch (error) {
-    console.error('Failed to create member:', error);
+    console.error('Échec de la création du membre :', error);
     throw error;
   }
 };
@@ -117,25 +108,22 @@ export const updateMember = async (id, data) => {
   try {
     let memberDataToSubmit = { ...data };
 
-    // Si un nouveau fichier de CV est fourni, nous l'uploadons.
+    // Si un nouveau fichier de CV est fourni (pas juste une URL string)
     if (data.cvFile && typeof data.cvFile !== 'string') {
-      const cvUrl = await uploadRawFileToCloudinary(data.cvFile);
-      memberDataToSubmit.cv_url = cvUrl;
+      memberDataToSubmit.cv_url = await uploadToCloudinary(data.cvFile, 'raw');
       delete memberDataToSubmit.cvFile;
     }
-    
-    // Si un nouveau fichier de photo de profil est fourni, nous l'uploadons.
+
+    // Si un nouveau fichier de photo est fourni (pas juste une URL string)
     if (data.photoFile && typeof data.photoFile !== 'string') {
-      const photoUrl = await uploadImageToCloudinary(data.photoFile);
-      memberDataToSubmit.photo_url = photoUrl;
+      memberDataToSubmit.photo_url = await uploadToCloudinary(data.photoFile, 'image');
       delete memberDataToSubmit.photoFile;
     }
 
-    // Le backend reçoit l'URL du CV et de la photo au lieu des fichiers bruts.
     const response = await api.put(`/members/${id}`, memberDataToSubmit);
     return response.data;
   } catch (error) {
-    console.error('Failed to update member:', error);
+    console.error('Échec de la mise à jour du membre :', error);
     throw error;
   }
 };
@@ -151,7 +139,7 @@ export const deleteMember = async (id) => {
     const response = await api.delete(`/members/${id}`);
     return response.data;
   } catch (error) {
-    console.error('Failed to delete member:', error);
+    console.error('Échec de la suppression du membre :', error);
     throw error;
   }
 };
