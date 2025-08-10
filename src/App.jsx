@@ -9,6 +9,7 @@ import Treasury from './pages/Treasury';
 import Projects from './pages/Projects';
 import Gallery from './pages/Gallery';
 import Login from './pages/Login';
+import Enterprises from './pages/Enterprises'; // Import du nouveau composant
 
 const App = () => {
   return (
@@ -22,6 +23,7 @@ const App = () => {
           <Route path="/treasury" element={<Treasury />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/gallery" element={<Gallery />} />
+          <Route path="/enterprises" element={<Enterprises />} /> {/* Ajout de la nouvelle route */}
           <Route path="/login" element={<Login />} />
         </Routes>
       </Router>
