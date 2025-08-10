@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   FiEdit2,
@@ -11,25 +11,37 @@ import {
   FiLayers,
   FiCheckCircle,
   FiDownload,
+  FiLoader,
+  FiAlertCircle,
 } from 'react-icons/fi';
 
+// Composant de carte pour afficher les informations d'un membre
 const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
+  // Gère l'état de chargement et d'erreur du CV
+  const [cvLoading, setCvLoading] = useState(true);
+  const [cvError, setCvError] = useState(false);
+
   // Utilisation de la propriété 'photo_url' et d'un fallback pour la photo de profil
   const profilePictureUrl =
     member.photo_url ||
     `https://ui-avatars.com/api/?name=${member.first_name}+${member.last_name}&background=10b981&color=fff&bold=true`;
   const isAdmin = userRole === 'admin';
 
+  // Réinitialise l'état de chargement et d'erreur lorsque l'URL du CV change
+  useEffect(() => {
+    if (member.cv_url) {
+      setCvLoading(true);
+      setCvError(false);
+    }
+  }, [member.cv_url]);
+
   // Fonction pour extraire le nom de fichier suggéré pour le CV
   const getSuggestedCvFileName = (url, memberName) => {
     try {
-      // Si l'URL contient déjà un nom de fichier valide
       if (url.includes('/')) {
         const filename = url.split('/').pop();
         if (filename.includes('.')) return filename;
       }
-      
-      // Sinon générer un nom basé sur le membre
       const safeName = memberName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
       return `cv_${safeName}.pdf`;
     } catch (e) {
@@ -41,8 +53,8 @@ const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
     ? getSuggestedCvFileName(member.cv_url, `${member.first_name}_${member.last_name}`)
     : '';
 
-  // Suppression de la vérification isPdf pour toujours tenter d'afficher l'iframe
-  // const isPdf = member.cv_url?.toLowerCase().endsWith('.pdf');
+  // Vérifie si le CV est un PDF
+  const isPdf = member.cv_url?.toLowerCase().endsWith('.pdf');
 
   return (
     <motion.div
@@ -138,15 +150,44 @@ const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
               </a>
             </div>
             
-            {/* Afficher l'iframe directement si l'URL du CV existe, sans vérifier le type de fichier */}
-            <iframe
-              src={member.cv_url}
-              title={`CV de ${member.first_name} ${member.last_name}`}
-              width="100%"
-              height="300"
-              className="rounded border"
-              style={{ backgroundColor: '#f9fafb' }}
-            />
+            {/* Rendu conditionnel du contenu de l'aperçu du CV */}
+            {isPdf ? (
+              <>
+                {cvLoading && (
+                  <div className="flex items-center justify-center h-48">
+                    <FiLoader className="animate-spin text-emerald-500 text-3xl" />
+                    <span className="ml-2 text-gray-500">Chargement...</span>
+                  </div>
+                )}
+                {cvError ? (
+                  <div className="flex flex-col items-center justify-center h-48 text-red-500">
+                    <FiAlertCircle className="text-4xl mb-2" />
+                    <p className="text-sm">Impossible de charger le CV.</p>
+                    <p className="text-xs text-gray-500">Veuillez vérifier le lien.</p>
+                  </div>
+                ) : (
+                  <iframe
+                    src={member.cv_url}
+                    title={`CV de ${member.first_name} ${member.last_name}`}
+                    width="100%"
+                    height="300"
+                    className={`rounded border ${cvLoading ? 'hidden' : ''}`}
+                    style={{ backgroundColor: '#f9fafb' }}
+                    onLoad={() => setCvLoading(false)}
+                    onError={() => {
+                      setCvLoading(false);
+                      setCvError(true);
+                    }}
+                  />
+                )}
+              </>
+            ) : (
+              <div className="text-center py-4 text-sm text-gray-500">
+                <FiFileText className="mx-auto text-2xl mb-2" />
+                <p>Aperçu non disponible</p>
+                <p className="text-xs mt-1">Le format du CV ne permet pas l'affichage direct.</p>
+              </div>
+            )}
           </div>
         )}
 
