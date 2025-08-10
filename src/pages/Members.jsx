@@ -53,17 +53,20 @@ const Members = () => {
     companyOrProject: '',
     activities: '',
     role: '',
-    photoFile: null, // Renommé 'profilePicture' en 'photoFile'
+    photoFile: null,
     profilePictureFileName: '',
     cvFile: null,
     cvFileName: ''
   });
-  const [existingFiles, setExistingFiles] = useState({
-    photo_url: null,
-    public_id: null,
-    cv_url: null,
-    cv_public_id: null
-  });
+  
+  // existingFiles a été supprimé car il n'était plus utilisé
+  // const [existingFiles, setExistingFiles] = useState({
+  //   photo_url: null,
+  //   public_id: null,
+  //   cv_url: null,
+  //   cv_public_id: null
+  // });
+
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -184,7 +187,7 @@ const Members = () => {
       return;
     }
 
-    if (formData.photoFile && formData.photoFile.size > 5 * 1024 * 1024) { // Utilisation de photoFile
+    if (formData.photoFile && formData.photoFile.size > 5 * 1024 * 1024) {
       setProfilePictureError('La photo de profil ne doit pas dépasser 5MB');
       return;
     }
@@ -197,7 +200,6 @@ const Members = () => {
     setIsSubmitting(true);
     
     try {
-      // Construction de l'objet de données à envoyer
       const dataToSubmit = {
         first_name: formData.firstName,
         last_name: formData.lastName,
@@ -212,7 +214,6 @@ const Members = () => {
         role: formData.role,
       };
 
-      // Ajout des fichiers seulement s'ils existent
       if (formData.photoFile) {
         dataToSubmit.photoFile = formData.photoFile;
       }
@@ -244,18 +245,11 @@ const Members = () => {
         });
       }
       
-      // Réinitialisation
       setFormData({
         firstName: '', lastName: '', sex: '', location: '', address: '',
         contact: '', profession: '', employmentStructure: '', companyOrProject: '',
         activities: '', role: '', photoFile: null, profilePictureFileName: '',
         cvFile: null, cvFileName: ''
-      });
-      setExistingFiles({
-        photo_url: null,
-        public_id: null,
-        cv_url: null,
-        cv_public_id: null
       });
     } catch (error) {
       console.error('Erreur lors de l\'opération sur le membre:', error);
@@ -276,12 +270,12 @@ const Members = () => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setProfilePictureError('Le fichier ne doit pas dépasser 5MB');
+        setProfilePictureError('La photo de profil ne doit pas dépasser 5MB');
         return;
       }
       setFormData({
         ...formData,
-        photoFile: file, // Renommé 'profilePicture' en 'photoFile'
+        photoFile: file,
         profilePictureFileName: file.name
       });
       setProfilePictureError('');
@@ -310,12 +304,6 @@ const Members = () => {
 
   const handleEdit = (member) => {
     setEditingId(member.id);
-    setExistingFiles({
-      photo_url: member.photo_url || null,
-      public_id: member.public_id || null,
-      cv_url: member.cv_url || null,
-      cv_public_id: member.cv_public_id || null
-    });
     setFormData({
       firstName: member.first_name || '',
       lastName: member.last_name || '',
@@ -585,9 +573,6 @@ const Members = () => {
                       contact: '', profession: '', employmentStructure: '', companyOrProject: '',
                       activities: '', role: '', photoFile: null, profilePictureFileName: '',
                       cvFile: null, cvFileName: ''
-                    });
-                    setExistingFiles({
-                      photo_url: null, public_id: null, cv_url: null, cv_public_id: null
                     });
                   }}
                   className="px-6 py-3 rounded-lg text-gray-700 font-semibold bg-gray-200 hover:bg-gray-300 transition-colors shadow-md"
