@@ -20,21 +20,23 @@ const Navbar = () => {
     { to: "/documents", text: "Documents" },
     { to: "/members", text: "Membres" },
     // Condition pour le lien "Trésorerie" : Admins et Trésoriers
-    ...((user?.role === 'treasurer' || user?.role === 'admin') 
-      ? [{ to: "/treasury", text: "Trésorerie" }] 
+    ...((user?.role === 'treasurer' || user?.role === 'admin')
+      ? [{ to: "/treasury", text: "Trésorerie" }]
       : []),
     // NOUVELLE CONDITION POUR LE LIEN "PROJETS" : Tous les utilisateurs connectés
     ...(user ? [{ to: "/projects", text: "Projets" }] : []),
+    // NOUVELLE CONDITION POUR LE LIEN "ENTREPRISES" : Tous les utilisateurs connectés
+    ...(user ? [{ to: "/enterprises", text: "Entreprises" }] : []),
     { to: "/gallery", text: "Galerie" }
   ];
 
   const mobileNavVariants = {
-    open: { 
+    open: {
       opacity: 1,
       x: 0,
       transition: { staggerChildren: 0.1, delayChildren: 0.2 }
     },
-    closed: { 
+    closed: {
       opacity: 0,
       x: "100%",
       transition: { staggerChildren: 0.05, staggerDirection: -1 }
@@ -42,12 +44,12 @@ const Navbar = () => {
   };
 
   const itemVariants = {
-    open: { 
+    open: {
       opacity: 1,
       y: 0,
       transition: { type: "spring", stiffness: 300, damping: 24 }
     },
-    closed: { 
+    closed: {
       opacity: 0,
       y: 20,
       transition: { duration: 0.2 }
@@ -59,16 +61,16 @@ const Navbar = () => {
       <div className="container mx-auto px-4 py-3">
         <div className="flex justify-between items-center">
           {/* Logo et nom de l'association */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
             className="flex items-center space-x-2"
           >
             <Link to="/" className="flex items-center">
-              <img 
-                src="/images/logo.png" 
-                alt="Logo" 
+              <img
+                src="/images/logo.png"
+                alt="Logo"
                 className="h-10 w-10 mr-2"
               />
               <span className="text-xl font-bold hidden sm:inline-block">
@@ -85,8 +87,8 @@ const Navbar = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Link 
-                  to={link.to} 
+                <Link
+                  to={link.to}
                   className="px-3 py-2 rounded-md text-sm font-medium hover:bg-green-700 transition-colors duration-300"
                 >
                   {link.text}
@@ -95,7 +97,7 @@ const Navbar = () => {
             ))}
 
             {user ? (
-              <motion.div 
+              <motion.div
                 className="flex items-center space-x-4"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -104,8 +106,8 @@ const Navbar = () => {
                 <div className="flex items-center space-x-2 bg-green-700 px-3 py-1 rounded-full">
                   <FaUser className="text-sm" />
                   <span className="text-sm font-medium">
-                    {user.role === 'admin' ? 'Admin' : 
-                     user.role === 'treasurer' ? 'Trésorier' : 
+                    {user.role === 'admin' ? 'Admin' :
+                     user.role === 'treasurer' ? 'Trésorier' :
                      'Membre'}
                   </span>
                 </div>
@@ -124,8 +126,8 @@ const Navbar = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Link 
-                  to="/login" 
+                <Link
+                  to="/login"
                   className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-300"
                 >
                   Connexion
@@ -140,8 +142,8 @@ const Navbar = () => {
               <div className="flex items-center mr-4 bg-green-700 px-2 py-1 rounded-full">
                 <FaUser className="text-sm mr-1" />
                 <span className="text-xs">
-                  {user.role === 'admin' ? 'Admin' : 
-                   user.role === 'treasurer' ? 'Trésorier' : 
+                  {user.role === 'admin' ? 'Admin' :
+                   user.role === 'treasurer' ? 'Trésorier' :
                    'Membre'}
                 </span>
               </div>
@@ -170,8 +172,8 @@ const Navbar = () => {
                 key={link.to}
                 variants={itemVariants}
               >
-                <Link 
-                  to={link.to} 
+                <Link
+                  to={link.to}
                   onClick={() => setIsOpen(false)}
                   className="block px-3 py-4 rounded-md text-base font-medium hover:bg-green-700 transition-colors duration-300"
                 >
@@ -193,8 +195,8 @@ const Navbar = () => {
                   <span>Déconnexion</span>
                 </button>
               ) : (
-                <Link 
-                  to="/login" 
+                <Link
+                  to="/login"
                   onClick={() => setIsOpen(false)}
                   className="flex items-center justify-center w-full space-x-2 bg-green-600 hover:bg-green-700 px-4 py-3 rounded-md text-base font-medium transition-colors duration-300"
                 >
