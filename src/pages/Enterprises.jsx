@@ -5,11 +5,11 @@ import { Building, Phone, Mail, Globe, PiggyBank, Fish, HeartHandshake, Sprout, 
 const enterprisesData = [
   {
     id: 1,
-    name: 'Ferme Piscicole "Le Grand Bleu"',
+    name: 'Ferme Piscicole "AfricaNut Fish Market"',
     logo: 'https://placehold.co/100x100/1e40af/ffffff?text=Logo',
     image: 'https://placehold.co/600x400/93c5fd/1e40af?text=Ferme+Piscicole',
-    activity: 'Élevage et vente de poissons d\'eau douce (tilapia, carpe).',
-    products: 'Tilapia frais, filets de poisson, alevins.',
+    activity: 'Élevage et vente de poissons d\'eau douce (silure, tilapia, carpe).',
+    products: 'Silure, tilapia frais, filets de poisson, alevins.',
     production: 'Production annuelle de 50 tonnes de poisson.',
     contact: {
       phone: '+237 6 77 88 99 00',
