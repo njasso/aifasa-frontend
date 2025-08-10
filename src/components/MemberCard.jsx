@@ -41,8 +41,8 @@ const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
     ? getSuggestedCvFileName(member.cv_url, `${member.first_name}_${member.last_name}`)
     : '';
 
-  // Vérifie si le CV est un PDF (pour déterminer s'il peut être affiché en iframe)
-  const isPdf = member.cv_url?.toLowerCase().endsWith('.pdf');
+  // Suppression de la vérification isPdf pour toujours tenter d'afficher l'iframe
+  // const isPdf = member.cv_url?.toLowerCase().endsWith('.pdf');
 
   return (
     <motion.div
@@ -138,22 +138,15 @@ const MemberCard = ({ member, onDelete, onEdit, userRole }) => {
               </a>
             </div>
             
-            {isPdf ? (
-              <iframe
-                src={member.cv_url}
-                title={`CV de ${member.first_name} ${member.last_name}`}
-                width="100%"
-                height="300"
-                className="rounded border"
-                style={{ backgroundColor: '#f9fafb' }}
-              />
-            ) : (
-              <div className="text-center py-4 text-sm text-gray-500">
-                <FiFileText className="mx-auto text-2xl mb-2" />
-                <p>Aperçu non disponible</p>
-                <p className="text-xs mt-1">Le format du CV ne permet pas l'affichage direct</p>
-              </div>
-            )}
+            {/* Afficher l'iframe directement si l'URL du CV existe, sans vérifier le type de fichier */}
+            <iframe
+              src={member.cv_url}
+              title={`CV de ${member.first_name} ${member.last_name}`}
+              width="100%"
+              height="300"
+              className="rounded border"
+              style={{ backgroundColor: '#f9fafb' }}
+            />
           </div>
         )}
 
