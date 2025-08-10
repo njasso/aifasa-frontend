@@ -9,13 +9,13 @@ const enterprisesData = [
     // URLs fournies par Cloudinary
     logo: 'https://res.cloudinary.com/djhyztec8/image/fetch/v1754811262/https://harmonious-boba-e7278d.netlify.app/cld-assets/images/partners/AFRICANUT_FISH_MARKET.png',
     image: 'https://res.cloudinary.com/djhyztec8/image/upload/v1754812663/WhatsApp_Image_2024-10-08_%C3%A0_11.42.46_edf79ff4_cmppa6.jpg',
-    activity: 'Élevage et vente de poissons d\'eau douce (silure, tilapia, carpe).',
+    activity: 'Élevage, vente de poissons d\'eau douce (silure, tilapia, carpe), aménagement des sites piscicoles et vente d\'équipements.',
     products: 'Silure, tilapia frais, filets de poisson, alevins.',
-    production: 'Production annuelle de 50 tonnes de poisson.',
+    production: 'Production annuelle de 7 tonnes de poisson.',
     contact: {
-      phone: '+237 6 77 88 99 00',
-      email: 'contact@legrandbleu.com',
-      website: 'www.legrandbleu.com'
+      phone: '+237 6 20 37 02 86',
+      email: 'africanutindustry@outlook.com',
+      website: 'www.africanutgroup.com'
     }
   },
   {
@@ -25,7 +25,7 @@ const enterprisesData = [
     image: 'https://res.cloudinary.com/djhyztec8/image/upload/v1754813064/little-chicks-farm_f5clss.jpg',
     activity: 'Production de poulets de chair et de poules pondeuses.',
     products: 'Poulets entiers, œufs de table, poussins.',
-    production: '100 000 poulets produits par an.',
+    production: '50 000 poulets produits par an.',
     contact: {
       phone: '+237 6 88 99 00 11',
       email: 'info@lacocottejoyeuse.com',
