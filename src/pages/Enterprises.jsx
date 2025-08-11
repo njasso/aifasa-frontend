@@ -63,8 +63,8 @@ const enterprisesData = [
   {
     id: 5,
     name: 'Bureau d\'Études "Alpha Conseil"',
-    logo: 'https://placehold.co/100x100/1f2937/ffffff?text=Logo',
-    image: 'https://placehold.co/600x400/6b7280/1f2937?text=Bureau+d\'etudes',
+    logo: 'https://res.cloudinary.com/djhyztec8/image/upload/v1754936839/WhatsApp_Image_2024-10-21_%C3%A0_09.58.35_31ede8c6_igk2wj.png',
+    image: 'https://res.cloudinary.com/djhyztec8/image/upload/v1754936616/0_bqykuz.png',
     activity: 'Services de conseil et d\'études de faisabilité pour projets agricoles.',
     products: 'Études de marché, plans d\'affaires, formations.',
     production: '50 projets de conseil réalisés par an.',
