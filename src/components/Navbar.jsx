@@ -15,19 +15,22 @@ const Navbar = () => {
     setIsOpen(false);
   };
 
-  const navLinks = [
+  // Liens de navigation toujours visibles (publics)
+  const publicNavLinks = [
     { to: "/", text: "Accueil" },
+    { to: "/enterprises", text: "Entreprises" },
+  ];
+
+  // Liens de navigation visibles uniquement pour les utilisateurs connectés
+  const protectedNavLinks = [
     { to: "/documents", text: "Documents" },
     { to: "/members", text: "Membres" },
     // Condition pour le lien "Trésorerie" : Admins et Trésoriers
     ...((user?.role === 'treasurer' || user?.role === 'admin')
       ? [{ to: "/treasury", text: "Trésorerie" }]
       : []),
-    // Condition pour le lien "PROJETS" : Tous les utilisateurs connectés
-    ...(user ? [{ to: "/projects", text: "Projets" }] : []),
-    // Le lien "Entreprises" est maintenant visible pour tous
-    { to: "/enterprises", text: "Entreprises" },
-    { to: "/gallery", text: "Galerie" }
+    { to: "/projects", text: "Projets" },
+    { to: "/gallery", text: "Galerie" },
   ];
 
   const mobileNavVariants = {
@@ -81,7 +84,8 @@ const Navbar = () => {
 
           {/* Navigation desktop */}
           <div className="hidden md:flex items-center space-x-6">
-            {navLinks.map((link) => (
+            {/* Liens publics */}
+            {publicNavLinks.map((link) => (
               <motion.div
                 key={link.to}
                 whileHover={{ scale: 1.05 }}
@@ -96,6 +100,23 @@ const Navbar = () => {
               </motion.div>
             ))}
 
+            {/* Liens protégés, visibles uniquement si l'utilisateur est connecté */}
+            {user && protectedNavLinks.map((link) => (
+              <motion.div
+                key={link.to}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Link
+                  to={link.to}
+                  className="px-3 py-2 rounded-md text-sm font-medium hover:bg-green-700 transition-colors duration-300"
+                >
+                  {link.text}
+                </Link>
+              </motion.div>
+            ))}
+
+            {/* Boutons de connexion/déconnexion */}
             {user ? (
               <motion.div
                 className="flex items-center space-x-4"
@@ -167,7 +188,24 @@ const Navbar = () => {
           style={{ display: isOpen ? 'block' : 'none' }}
         >
           <div className="px-4 pt-2 pb-8 space-y-2">
-            {navLinks.map((link) => (
+            {/* Liens publics en mobile */}
+            {publicNavLinks.map((link) => (
+              <motion.div
+                key={link.to}
+                variants={itemVariants}
+              >
+                <Link
+                  to={link.to}
+                  onClick={() => setIsOpen(false)}
+                  className="block px-3 py-4 rounded-md text-base font-medium hover:bg-green-700 transition-colors duration-300"
+                >
+                  {link.text}
+                </Link>
+              </motion.div>
+            ))}
+            
+            {/* Liens protégés en mobile, visibles uniquement si l'utilisateur est connecté */}
+            {user && protectedNavLinks.map((link) => (
               <motion.div
                 key={link.to}
                 variants={itemVariants}
