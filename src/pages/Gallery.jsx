@@ -1,107 +1,8 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { getMedia, createMedia, deleteMedia } from '../services/galleryService'; // Assumed service names
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiX, FiUpload, FiImage, FiPlayCircle, FiUsers, FiUser } from 'react-icons/fi';
-import { v4 as uuidv4 } from 'uuid';
-
-// Mock Auth Context and Hook
-// In a real app, this would handle authentication with Firebase or another provider.
-const AuthContext = createContext(null);
-
-const useAuth = () => useContext(AuthContext);
-
-const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState({
-    id: uuidv4(),
-    name: 'Jane Doe',
-    role: 'user', // Default role is 'user'
-  });
-
-  const toggleRole = () => {
-    setUser((prevUser) => ({
-      ...prevUser,
-      role: prevUser.role === 'admin' ? 'user' : 'admin',
-    }));
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, toggleRole }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-// Mock In-memory Gallery Service
-// This simulates API calls for fetching, creating, and deleting media.
-const mockMedia = [
-  {
-    id: uuidv4(),
-    title: 'Vue d\'ensemble de notre projet',
-    category: 'Projet',
-    file_url: 'https://placehold.co/800x600/22c55e/ffffff?text=Image+1',
-    file_type: 'image/png',
-  },
-  {
-    id: uuidv4(),
-    title: 'Cérémonie de remise de prix',
-    category: 'Événement',
-    file_url: 'https://placehold.co/800x600/059669/ffffff?text=Image+2',
-    file_type: 'image/png',
-  },
-  {
-    id: uuidv4(),
-    title: 'Rencontre d\'équipe',
-    category: 'Événement',
-    file_url: 'https://placehold.co/800x600/16a34a/ffffff?text=Image+3',
-    file_type: 'image/png',
-  },
-];
-
-const galleryService = {
-  getMedia: () => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(mockMedia);
-      }, 500); // Simulate network delay
-    });
-  },
-  createMedia: (formData) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const file = formData.get('file');
-        if (!file) {
-          reject(new Error('No file provided.'));
-          return;
-        }
-        const reader = new FileReader();
-        reader.onload = () => {
-          const newMedia = {
-            id: uuidv4(),
-            title: formData.get('title'),
-            category: formData.get('category'),
-            file_url: reader.result,
-            file_type: file.type,
-          };
-          mockMedia.unshift(newMedia);
-          resolve(newMedia);
-        };
-        reader.readAsDataURL(file);
-      }, 500); // Simulate network delay
-    });
-  },
-  deleteMedia: (id) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const index = mockMedia.findIndex((item) => item.id === id);
-        if (index !== -1) {
-          mockMedia.splice(index, 1);
-          resolve({ success: true });
-        } else {
-          reject(new Error('Media not found.'));
-        }
-      }, 500); // Simulate network delay
-    });
-  },
-};
+import { FiX, FiUpload, FiImage, FiPlayCircle } from 'react-icons/fi';
 
 // Custom Confirmation Modal component to replace window.confirm
 const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
@@ -190,7 +91,7 @@ const Gallery = () => {
     const fetchMedia = async () => {
       setLoading(true);
       try {
-        const data = await galleryService.getMedia();
+        const data = await getMedia();
         setMedia(data);
       } catch (error) {
         console.error('Erreur lors du chargement des médias:', error);
@@ -216,7 +117,7 @@ const Gallery = () => {
       data.append('category', formData.category.trim());
       data.append('file', formData.file);
 
-      const newMedia = await galleryService.createMedia(data);
+      const newMedia = await createMedia(data);
       setMedia([newMedia, ...media]);
       setFormData({ title: '', category: '', file: null, fileName: '', fileType: '' });
       e.target.reset();
@@ -251,7 +152,7 @@ const Gallery = () => {
 
   const confirmDelete = async () => {
     try {
-      await galleryService.deleteMedia(mediaToDelete);
+      await deleteMedia(mediaToDelete);
       setMedia(media.filter((item) => item.id !== mediaToDelete));
       setShowConfirmModal(false);
       setMediaToDelete(null);
@@ -291,9 +192,6 @@ const Gallery = () => {
           Découvrez nos moments forts et nos réalisations en images et vidéos
         </p>
       </motion.div>
-
-      {/* Bouton pour basculer le rôle de l'utilisateur */}
-      <UserRoleToggle />
 
       {/* Formulaire d'ajout */}
       {user?.role === 'admin' && (
@@ -533,39 +431,4 @@ const Gallery = () => {
   );
 };
 
-const UserRoleToggle = () => {
-  const { user, toggleRole } = useAuth();
-  return (
-    <div className="flex justify-center mb-8">
-      <button
-        onClick={toggleRole}
-        className="px-6 py-2 bg-slate-100 text-slate-800 rounded-full font-semibold shadow-md flex items-center space-x-2 hover:bg-slate-200 transition-colors"
-      >
-        {user.role === 'admin' ? (
-          <>
-            <FiUsers className="text-green-600" />
-            <span>Mode Admin activé</span>
-          </>
-        ) : (
-          <>
-            <FiUser className="text-slate-500" />
-            <span>Mode Utilisateur activé</span>
-          </>
-        )}
-      </button>
-    </div>
-  );
-};
-
-// Main App component to render everything
-const App = () => {
-  return (
-    <AuthProvider>
-      <div className="bg-gray-50 min-h-screen font-sans antialiased text-gray-900">
-        <Gallery />
-      </div>
-    </AuthProvider>
-  );
-};
-
-export default App;
+export default Gallery;
