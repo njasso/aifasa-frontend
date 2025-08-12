@@ -1,8 +1,69 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { getMedia, createMedia, deleteMedia } from '../services/galleryService'; // Assumed service names
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiUpload, FiImage, FiPlayCircle } from 'react-icons/fi';
+// The following imports are assumed to be defined in your project
+// import { useAuth } from '../context/AuthContext';
+// import { getMedia, createMedia, deleteMedia } from '../services/galleryService'; 
+
+// Mock data and services for demonstration purposes
+const mockMedia = [
+  {
+    id: 1,
+    title: 'Vue sur la ville',
+    category: 'Voyage',
+    file_type: 'image/jpeg',
+    file_url: 'https://placehold.co/600x400/22c55e/ffffff?text=Image+1',
+  },
+  {
+    id: 2,
+    title: 'Développement de code',
+    category: 'Projet',
+    file_type: 'image/png',
+    file_url: 'https://placehold.co/800x600/10b981/ffffff?text=Image+2',
+  },
+  {
+    id: 3,
+    title: 'Plage ensoleillée',
+    category: 'Voyage',
+    file_type: 'image/jpeg',
+    file_url: 'https://placehold.co/900x500/22c55e/ffffff?text=Image+3',
+  },
+  {
+    id: 4,
+    title: 'Clip vidéo',
+    category: 'Événement',
+    file_type: 'video/mp4',
+    file_url: 'https://placehold.co/600x400.mp4', // Placeholder video
+  },
+  {
+    id: 5,
+    title: 'Vue sur le lac',
+    category: 'Nature',
+    file_type: 'image/jpeg',
+    file_url: 'https://placehold.co/700x700/10b981/ffffff?text=Image+5',
+  },
+];
+
+const getMedia = () => Promise.resolve(mockMedia);
+const createMedia = (data) => {
+  const newId = Math.max(...mockMedia.map(m => m.id)) + 1;
+  const newMediaItem = {
+    id: newId,
+    title: data.get('title'),
+    category: data.get('category'),
+    file_type: data.get('file').type,
+    file_url: URL.createObjectURL(data.get('file')),
+  };
+  mockMedia.unshift(newMediaItem);
+  return Promise.resolve(newMediaItem);
+};
+const deleteMedia = (id) => {
+  const index = mockMedia.findIndex(item => item.id === id);
+  if (index > -1) {
+    mockMedia.splice(index, 1);
+  }
+  return Promise.resolve();
+};
 
 // Custom Confirmation Modal component to replace window.confirm
 const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
@@ -70,7 +131,8 @@ const slideUp = {
 };
 
 const Gallery = () => {
-  const { user } = useAuth();
+  // Replace with your actual user data, assuming 'admin' role is needed for adding/deleting
+  const user = { role: 'admin' }; 
   const [media, setMedia] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
@@ -309,7 +371,8 @@ const Gallery = () => {
                     <>
                       <video
                         src={item.file_url}
-                        className="absolute h-full w-full object-contain"
+                        // MODIFICATION : Remplacer object-contain par object-cover
+                        className="absolute h-full w-full object-cover" 
                         preload="metadata"
                       />
                       <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 text-white">
@@ -320,7 +383,8 @@ const Gallery = () => {
                     <img
                       src={item.file_url}
                       alt={item.title}
-                      className="absolute h-full w-full object-contain"
+                      // MODIFICATION : Remplacer object-contain par object-cover
+                      className="absolute h-full w-full object-cover"
                     />
                   )}
                 </div>
