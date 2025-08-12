@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { getMedia, createMedia, deleteMedia } from '../services/galleryService'; // Assumed service names
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiUpload, FiImage, FiPlayCircle } from 'react-icons/fi';
+import { deleteMedia } from '../services/galleryService'; // Assumed service names
+import { v4 as uuidv4 } from 'uuid'; // Importez uuid pour un identifiant unique
 
 // Custom Confirmation Modal component to replace window.confirm
 const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
@@ -69,8 +69,41 @@ const slideUp = {
   visible: { y: 0, opacity: 1, transition: { duration: 0.3 } }
 };
 
+// Simulation d'un service de données pour le moment
+const getMedia = async () => {
+    console.log("Fetching media...");
+    return new Promise(resolve => {
+        // En réalité, vous feriez un appel à votre API Cloudinary ou à votre backend ici.
+        // Voici quelques données de démonstration avec des images et une vidéo.
+        const demoData = [
+            { id: uuidv4(), title: "Photo de la nature", category: "Paysage", file_url: "https://placehold.co/800x600/e0e0e0/000000?text=Paysage", file_type: "image/jpeg" },
+            { id: uuidv4(), title: "Vidéo d'entreprise", category: "Événement", file_url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4", file_type: "video/mp4" },
+            { id: uuidv4(), title: "Une autre image", category: "Projet", file_url: "https://placehold.co/600x800/d0d0d0/000000?text=Projet", file_type: "image/jpeg" },
+        ];
+        setTimeout(() => resolve(demoData), 1000);
+    });
+};
+
+const createMedia = async (formData) => {
+    console.log("Uploading media...");
+    return new Promise((resolve) => {
+        // Simule un upload réussi
+        const newMedia = {
+            id: uuidv4(),
+            title: formData.get('title'),
+            category: formData.get('category'),
+            file_url: URL.createObjectURL(formData.get('file')),
+            file_type: formData.get('file').type,
+        };
+        setTimeout(() => resolve(newMedia), 1000);
+    });
+};
+
 const Gallery = () => {
-  const { user } = useAuth();
+  // Pour cette démo, nous gérons l'authentification avec un rôle hardcodé.
+  // Remplacez cela par votre logique d'authentification réelle.
+  const user = { role: 'admin' };
+
   const [media, setMedia] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
@@ -110,8 +143,15 @@ const Gallery = () => {
       setFileError('Veuillez sélectionner une image ou une vidéo.');
       return;
     }
+    
+    // Ajout d'une limite de taille de fichier ici
+    if (formData.file.size > 50 * 1024 * 1024) {
+      setFileError('Le fichier ne doit pas dépasser 50MB');
+      return;
+    }
 
     try {
+      setLoading(true); // Afficher le chargement
       const data = new FormData();
       data.append('title', formData.title.trim());
       data.append('category', formData.category.trim());
@@ -121,20 +161,18 @@ const Gallery = () => {
       setMedia([newMedia, ...media]);
       setFormData({ title: '', category: '', file: null, fileName: '', fileType: '' });
       e.target.reset();
+      setMessage('Média ajouté avec succès !');
     } catch (error) {
       console.error('Erreur lors de l\'ajout du média:', error);
       setMessage(`Échec de l'ajout du média: ${error.message || 'Erreur inconnue'}`);
+    } finally {
+      setLoading(false); // Cacher le chargement
     }
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // 50MB limit for both images and videos
-      if (file.size > 50 * 1024 * 1024) {
-        setFileError('Le fichier ne doit pas dépasser 50MB');
-        return;
-      }
       setFormData({
         ...formData,
         file: file,
@@ -156,6 +194,7 @@ const Gallery = () => {
       setMedia(media.filter((item) => item.id !== mediaToDelete));
       setShowConfirmModal(false);
       setMediaToDelete(null);
+      setMessage('Média supprimé avec succès.');
     } catch (error) {
       console.error('Erreur lors de la suppression du média:', error);
       setMessage(`Échec de la suppression du média: ${error.message || 'Erreur inconnue'}`);
@@ -175,8 +214,7 @@ const Gallery = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* En-tête avec animation */}
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -205,7 +243,6 @@ const Gallery = () => {
             <FiUpload className="mr-2 text-green-600" />
             Ajouter un Média
           </h2>
-
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -218,7 +255,6 @@ const Gallery = () => {
                   required
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
                 <input
@@ -230,7 +266,6 @@ const Gallery = () => {
                 />
               </div>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Fichier Média*</label>
               <label className={`block w-full border ${fileError ? 'border-red-500' : 'border-gray-300'} rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500`}>
@@ -251,12 +286,12 @@ const Gallery = () => {
               {fileError && <p className="mt-1 text-sm text-red-600">{fileError}</p>}
               <p className="mt-1 text-xs text-gray-500">Formats acceptés : Images (JPG, PNG), Vidéos (MP4, WEBM) - max 50MB</p>
             </div>
-
             <button
               type="submit"
               className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-300 shadow-md"
+              disabled={loading}
             >
-              Publier le Média
+              {loading ? 'Publication en cours...' : 'Publier le Média'}
             </button>
           </form>
         </motion.div>
@@ -309,7 +344,7 @@ const Gallery = () => {
                     <>
                       <video
                         src={item.file_url}
-                        className="absolute h-full w-full object-contain"
+                        className="absolute h-full w-full object-cover"
                         preload="metadata"
                       />
                       <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 text-white">
@@ -320,7 +355,7 @@ const Gallery = () => {
                     <img
                       src={item.file_url}
                       alt={item.title}
-                      className="absolute h-full w-full object-contain"
+                      className="absolute h-full w-full object-cover"
                     />
                   )}
                 </div>
@@ -375,7 +410,6 @@ const Gallery = () => {
                   <FiX size={24} />
                 </button>
               </div>
-
               <div className="flex-grow flex items-center justify-center p-4 overflow-auto">
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -399,7 +433,6 @@ const Gallery = () => {
                   )}
                 </motion.div>
               </div>
-
               {selectedMedia.category && (
                 <div className="p-4 border-t border-gray-200">
                   <p className="text-sm text-gray-600">
