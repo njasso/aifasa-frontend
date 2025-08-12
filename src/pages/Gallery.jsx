@@ -308,10 +308,10 @@ const Gallery = () => {
                 <div className="relative pb-[100%] bg-gray-100 flex items-center justify-center">
                   {item.file_type.startsWith('video') ? (
                     <>
-                      {/* La vidéo s'étend pour couvrir le conteneur, en recadrant si nécessaire */}
+                      {/* La vidéo s'étend pour s'adapter au conteneur sans être coupée */}
                       <video
                         src={item.file_url}
-                        className="absolute h-full w-full object-cover object-center"
+                        className="absolute h-full w-full object-contain object-center"
                         preload="metadata"
                       />
                       <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 text-white">
@@ -319,11 +319,11 @@ const Gallery = () => {
                       </div>
                     </>
                   ) : (
-                    /* L'image s'étend pour couvrir le conteneur, en recadrant si nécessaire */
+                    /* L'image s'étend pour s'adapter au conteneur sans être coupée */
                     <img
                       src={item.file_url}
                       alt={item.title}
-                      className="absolute h-full w-full object-cover object-center"
+                      className="absolute h-full w-full object-contain object-center"
                     />
                   )}
                 </div>
