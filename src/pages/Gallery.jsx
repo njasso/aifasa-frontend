@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getMedia, createMedia, deleteMedia } from '../services/galleryService'; // Assumed service names
+import { getMedia, createMedia, deleteMedia } from '../services/galleryService'; // Supposons que ces services sont définis
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiUpload, FiImage, FiPlayCircle } from 'react-icons/fi';
 
-// Custom Confirmation Modal component to replace window.confirm
+// Composant de modale de confirmation personnalisé pour remplacer window.confirm
 const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
   <motion.div
     initial={{ opacity: 0 }}
@@ -37,7 +37,7 @@ const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
   </motion.div>
 );
 
-// Custom Message Box component to replace alert
+// Composant de boîte de message personnalisé pour remplacer alert
 const MessageBox = ({ message, onClose }) => (
   <motion.div
     initial={{ opacity: 0 }}
@@ -130,7 +130,7 @@ const Gallery = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // 50MB limit for both images and videos
+      // Limite de 50 Mo pour les images et les vidéos
       if (file.size > 50 * 1024 * 1024) {
         setFileError('Le fichier ne doit pas dépasser 50MB');
         return;
@@ -304,9 +304,11 @@ const Gallery = () => {
                 className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-300 cursor-pointer"
                 onClick={() => handleMediaClick(item)}
               >
+                {/* Le conteneur avec un rapport d'aspect carré */}
                 <div className="relative pb-[100%] bg-gray-100 flex items-center justify-center">
                   {item.file_type.startsWith('video') ? (
                     <>
+                      {/* La vidéo s'étend pour couvrir le conteneur, en recadrant si nécessaire */}
                       <video
                         src={item.file_url}
                         className="absolute h-full w-full object-cover object-center"
@@ -317,6 +319,7 @@ const Gallery = () => {
                       </div>
                     </>
                   ) : (
+                    /* L'image s'étend pour couvrir le conteneur, en recadrant si nécessaire */
                     <img
                       src={item.file_url}
                       alt={item.title}
