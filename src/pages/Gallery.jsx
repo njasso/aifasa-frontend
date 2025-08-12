@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getMedia, createMedia, deleteMedia } from '../services/galleryService'; // Assumed service names
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiX, FiUpload, FiImage, FiVideo, FiPlayCircle } from 'react-icons/fi';
+import { FiX, FiUpload, FiImage, FiPlayCircle } from 'react-icons/fi'; // L'icône FiVideo a été supprimée
 
 // Custom Confirmation Modal component to replace window.confirm
 const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
