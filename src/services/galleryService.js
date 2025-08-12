@@ -1,18 +1,18 @@
 import api from './api';
 
-// Récupère toutes les images
-export const getImages = async () => {
+// Récupère tous les médias (images et vidéos)
+export const getMedia = async () => {
   try {
     const response = await api.get('/gallery');
     return response.data;
   } catch (error) {
-    console.error('Error fetching images:', error);
+    console.error('Error fetching media:', error);
     throw error;
   }
 };
 
-// Crée une nouvelle image
-export const createImage = async (data) => {
+// Crée un nouveau média
+export const createMedia = async (data) => {
   try {
     const response = await api.post('/gallery', data, {
       headers: {
@@ -21,18 +21,18 @@ export const createImage = async (data) => {
     });
     return response.data;
   } catch (error) {
-    console.error('Error creating image:', error);
+    console.error('Error creating media:', error);
     throw error;
   }
 };
 
-// Supprime une image par son ID
-export const deleteImage = async (id) => {
+// Supprime un média par son ID
+export const deleteMedia = async (id) => {
   try {
     const response = await api.delete(`/gallery/${id}`);
     return response.data;
   } catch (error) {
-    console.error('Error deleting image:', error);
+    console.error('Error deleting media:', error);
     throw error;
   }
 };
