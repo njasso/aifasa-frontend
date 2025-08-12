@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getMedia, createMedia, deleteMedia } from '../services/galleryService'; // Supposons que ces services sont définis
+import { getMedia, createMedia, deleteMedia } from '../services/galleryService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiUpload, FiImage, FiPlayCircle } from 'react-icons/fi';
 
-// Composant de modale de confirmation personnalisé pour remplacer window.confirm
 const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
   <motion.div
     initial={{ opacity: 0 }}
@@ -37,7 +36,6 @@ const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
   </motion.div>
 );
 
-// Composant de boîte de message personnalisé pour remplacer alert
 const MessageBox = ({ message, onClose }) => (
   <motion.div
     initial={{ opacity: 0 }}
@@ -130,7 +128,6 @@ const Gallery = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Limite de 50 Mo pour les images et les vidéos
       if (file.size > 50 * 1024 * 1024) {
         setFileError('Le fichier ne doit pas dépasser 50MB');
         return;
@@ -176,7 +173,6 @@ const Gallery = () => {
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* En-tête avec animation */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -193,7 +189,6 @@ const Gallery = () => {
         </p>
       </motion.div>
 
-      {/* Formulaire d'ajout */}
       {user?.role === 'admin' && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -262,7 +257,6 @@ const Gallery = () => {
         </motion.div>
       )}
 
-      {/* Galerie d'images */}
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-600"></div>
@@ -304,14 +298,13 @@ const Gallery = () => {
                 className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-300 cursor-pointer"
                 onClick={() => handleMediaClick(item)}
               >
-                {/* Le conteneur avec un rapport d'aspect carré */}
-                <div className="relative pb-[100%] bg-gray-100 flex items-center justify-center">
+                {/* Nouvelle version du conteneur image/vidéo */}
+                <div className="relative h-64 bg-gray-100 flex items-center justify-center">
                   {item.file_type.startsWith('video') ? (
                     <>
-                      {/* La vidéo s'étend pour s'adapter au conteneur sans être coupée */}
                       <video
                         src={item.file_url}
-                        className="absolute h-full w-full object-contain object-center"
+                        className="max-h-full max-w-full object-contain"
                         preload="metadata"
                       />
                       <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 text-white">
@@ -319,11 +312,10 @@ const Gallery = () => {
                       </div>
                     </>
                   ) : (
-                    /* L'image s'étend pour s'adapter au conteneur sans être coupée */
                     <img
                       src={item.file_url}
                       alt={item.title}
-                      className="absolute h-full w-full object-contain object-center"
+                      className="max-h-full max-w-full object-contain"
                     />
                   )}
                 </div>
@@ -352,7 +344,6 @@ const Gallery = () => {
         </motion.div>
       )}
 
-      {/* Modale de visualisation, confirmation et messages */}
       <>
         <AnimatePresence>
           {isModalOpen && selectedMedia && (
