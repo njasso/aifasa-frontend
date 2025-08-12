@@ -1,10 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { getImages, createImage, deleteImage } from '../services/galleryService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiUpload, FiImage } from 'react-icons/fi';
 
-// Custom Confirmation Modal component to replace window.confirm
+// Dummy user and services to make the code runnable in this environment
+// Dans une vraie application, vous utiliseriez un contexte d'authentification et des services API
+const useAuth = () => ({ user: { role: 'admin' } });
+const getImages = async () => [
+  { id: 1, title: 'Photo de paysage', category: 'Nature', image_url: 'https://images.unsplash.com/photo-1518770660439-4630575d170a?q=80&w=2070&auto=format&fit=crop' },
+  { id: 2, title: 'Portrait en noir et blanc', category: 'Portrait', image_url: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=2080&auto=format&fit=crop' },
+  { id: 3, title: 'Architecture moderne', category: 'Architecture', image_url: 'https://images.unsplash.com/photo-1481831131102-12f866415714?q=80&w=2070&auto=format&fit=crop' },
+  { id: 4, title: 'Nature morte', category: 'Art', image_url: 'https://images.unsplash.com/photo-1549448028-f6236319808a?q=80&w=2070&auto=format&fit=crop' },
+];
+const createImage = async (data) => {
+  console.log('Création de l\'image avec les données:', data);
+  // Retourne une fausse nouvelle image pour la démonstration
+  return {
+    id: Date.now(),
+    title: data.get('title'),
+    category: data.get('category'),
+    image_url: 'https://images.unsplash.com/photo-1587620962725-abab7fe023b1?q=80&w=1931&auto=format&fit=crop',
+  };
+};
+const deleteImage = async (id) => {
+  console.log('Suppression de l\'image avec l\'ID:', id);
+};
+
+// Composant de Confirmation Modal personnalisé pour remplacer window.confirm
 const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
   <motion.div
     initial={{ opacity: 0 }}
@@ -37,7 +58,7 @@ const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
   </motion.div>
 );
 
-// Custom Message Box component to replace alert
+// Composant de MessageBox personnalisé pour remplacer alert
 const MessageBox = ({ message, onClose }) => (
   <motion.div
     initial={{ opacity: 0 }}
@@ -72,9 +93,9 @@ const slideUp = {
 const Gallery = () => {
   const { user } = useAuth();
   const [images, setImages] = useState([]);
-  const [formData, setFormData] = useState({ 
-    title: '', 
-    category: '', 
+  const [formData, setFormData] = useState({
+    title: '',
+    category: '',
     image: null,
     fileName: ''
   });
@@ -120,6 +141,7 @@ const Gallery = () => {
       setImages([newImage, ...images]);
       setFormData({ title: '', category: '', image: null, fileName: '' });
       e.target.reset();
+      setMessage('Image ajoutée avec succès !');
     } catch (error) {
       console.error('Erreur lors de l\'ajout de l\'image:', error);
       setMessage(`Échec de l'ajout de l'image: ${error.message || 'Erreur inconnue'}`);
@@ -173,12 +195,12 @@ const Gallery = () => {
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setTimeout(() => setSelectedImage(null), 300); // Attend que l'animation se termine
+    setTimeout(() => setSelectedImage(null), 300); // Wait for the animation to finish
   };
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* En-tête avec animation */}
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans">
+      {/* Header with animation */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -195,7 +217,7 @@ const Gallery = () => {
         </p>
       </motion.div>
 
-      {/* Formulaire d'ajout */}
+      {/* Add Image Form */}
       {user?.role === 'admin' && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -264,7 +286,7 @@ const Gallery = () => {
         </motion.div>
       )}
 
-      {/* Galerie d'images */}
+      {/* Image Gallery */}
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-600"></div>
@@ -306,9 +328,7 @@ const Gallery = () => {
                 className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-300 cursor-pointer"
                 onClick={() => handleImageClick(image)}
               >
-                {/* Le conteneur parent conserve le ratio carré */}
                 <div className="relative pb-[100%] bg-gray-100">
-                  {/* L'image est maintenant centrée et ajustée */}
                   <img 
                     src={image.image_url} 
                     alt={image.title}
@@ -340,7 +360,7 @@ const Gallery = () => {
         </motion.div>
       )}
 
-      {/* Modale de visualisation */}
+      {/* Image View Modal */}
       <AnimatePresence>
         {isModalOpen && selectedImage && (
           <motion.div
