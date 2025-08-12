@@ -306,7 +306,9 @@ const Gallery = () => {
                 className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-300 cursor-pointer"
                 onClick={() => handleImageClick(image)}
               >
+                {/* Le conteneur parent conserve le ratio carré */}
                 <div className="relative pb-[100%] bg-gray-100">
+                  {/* L'image est maintenant centrée et ajustée */}
                   <img 
                     src={image.image_url} 
                     alt={image.title}
