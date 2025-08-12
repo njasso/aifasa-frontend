@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getMedia, createMedia, deleteMedia } from '../services/galleryService'; // Assumed service names
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiX, FiUpload, FiImage, FiPlayCircle } from 'react-icons/fi'; // L'icône FiVideo a été supprimée
+import { FiX, FiUpload, FiImage, FiPlayCircle } from 'react-icons/fi';
 
 // Custom Confirmation Modal component to replace window.confirm
 const ConfirmationModal = ({ message, onConfirm, onCancel }) => (
@@ -75,9 +75,9 @@ const Gallery = () => {
   const [formData, setFormData] = useState({
     title: '',
     category: '',
-    file: null, // Renamed from image to file
+    file: null,
     fileName: '',
-    fileType: '', // Added fileType
+    fileType: '',
   });
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -309,7 +309,8 @@ const Gallery = () => {
                     <>
                       <video
                         src={item.file_url}
-                        className="absolute h-full w-full object-cover"
+                        // Modification: 'object-cover' a été remplacé par 'object-contain'
+                        className="absolute h-full w-full object-contain"
                         preload="metadata"
                       />
                       <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 text-white">
@@ -320,7 +321,8 @@ const Gallery = () => {
                     <img
                       src={item.file_url}
                       alt={item.title}
-                      className="absolute h-full w-full object-cover"
+                      // Modification: 'object-cover' a été remplacé par 'object-contain'
+                      className="absolute h-full w-full object-contain"
                     />
                   )}
                 </div>
