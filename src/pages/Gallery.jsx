@@ -309,7 +309,6 @@ const Gallery = () => {
                     <>
                       <video
                         src={item.file_url}
-                        // Modification: 'object-cover' a été remplacé par 'object-contain'
                         className="absolute h-full w-full object-contain"
                         preload="metadata"
                       />
@@ -321,7 +320,6 @@ const Gallery = () => {
                     <img
                       src={item.file_url}
                       alt={item.title}
-                      // Modification: 'object-cover' a été remplacé par 'object-contain'
                       className="absolute h-full w-full object-contain"
                     />
                   )}
