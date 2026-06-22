@@ -1,3 +1,4 @@
+// src/pages/public/About.jsx
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -24,7 +25,8 @@ import {
   FiStar,
   FiLink,
   FiFacebook,
-  FiYoutube
+  FiYoutube,
+  FiExternalLink
 } from 'react-icons/fi';
 import { FaLinkedin } from 'react-icons/fa';
 
@@ -36,9 +38,9 @@ const About = () => {
   
   // Statistiques clés
   const stats = [
-    { icon: FiUsers, value: '50+', label: 'Membres actifs' },
+    { icon: FiUsers, value: '35+', label: 'Membres actifs' },
     { icon: FiBriefcase, value: '15+', label: 'Projets réalisés' },
-    { icon: FiAward, value: '5+', label: 'Partenariats' },
+    { icon: FiAward, value: '3+', label: 'Partenariats' },
     { icon: FiCalendar, value: '7 ans', label: "D'existence" },
   ];
 
@@ -160,21 +162,33 @@ const About = () => {
   ];
 
   const partners = [
-    { name: 'MINADER', sector: 'Agriculture' },
-    { name: 'MINFOF', sector: 'Forêts & Faune' },
-    { name: 'MINEPIA', sector: 'Élevage & Pêche' },
-    { name: 'Rainforest Alliance', sector: 'Conservation' },
-    { name: 'African Wildlife Foundation', sector: 'Conservation' },
-    { name: 'IITA', sector: 'Recherche agricole' },
+    { 
+      name: 'AFRICANUT FISH MARKET', 
+      logo: 'https://res.cloudinary.com/djhyztec8/image/upload/v1755204855/project_Market_jjqyxl.png',
+      url: '',
+      sector: 'Aquaculture'
+    },
+    { 
+      name: 'NOUVELLE ACADEMIE NUMERIQUE AFRICAINE', 
+      logo: 'https://res.cloudinary.com/djhyztec8/image/upload/v1755204980/logo_t9bd7r.png',
+      url: '',
+      sector: 'Numérique'
+    },
+    { 
+      name: 'MAPOURE AGRIBUSINESS', 
+      logo: 'https://res.cloudinary.com/djhyztec8/image/upload/v1754936839/WhatsApp_Image_2024-10-21_%C3%A0_09.58.35_31ede8c6_igk2wj.png',
+      url: '',
+      sector: 'Élevage'
+    },
   ];
 
   const galleryImages = [
     { url: 'https://images.unsplash.com/photo-1595515106969-1ce29566ff1c?auto=format&fit=crop&q=80&w=800', caption: 'Travaux de terrain en agroforesterie' },
     { url: 'https://res.cloudinary.com/djhyztec8/image/upload/v1782068840/WhatsApp_Image_2026-06-21_at_19.51.37_frfzdi.jpg', caption: 'Session de réorientation des activités' },
     { url: 'https://res.cloudinary.com/djhyztec8/image/upload/v1782070025/IMG_1458_qhge7f.jpg', caption: 'Projets piscicoles' },
-     { url: 'https://res.cloudinary.com/djhyztec8/image/upload/v1782067779/WhatsApp_Image_2026-06-21_at_19.40.41_je2cba.jpg', caption: 'Etude d\'impacts environnemetales route Akom 2 -Kribi ' },
-      { url: 'https://res.cloudinary.com/djhyztec8/image/upload/v1782071069/PXL_20250703_074528129_t1kixn.jpg', caption: 'Formation aux métiers piscicoles' },
-       { url: 'https://res.cloudinary.com/djhyztec8/image/upload/v1782069784/IMG_2835_jagn6a.jpg', caption: 'Projets agricoles durables' },
+    { url: 'https://res.cloudinary.com/djhyztec8/image/upload/v1782067779/WhatsApp_Image_2026-06-21_at_19.40.41_je2cba.jpg', caption: 'Etude d\'impacts environnemetales route Akom 2 -Kribi' },
+    { url: 'https://res.cloudinary.com/djhyztec8/image/upload/v1782071069/PXL_20250703_074528129_t1kixn.jpg', caption: 'Formation aux métiers piscicoles' },
+    { url: 'https://res.cloudinary.com/djhyztec8/image/upload/v1782069784/IMG_2835_jagn6a.jpg', caption: 'Projets agricoles durables' },
   ];
 
   const contactInfo = {
@@ -183,7 +197,6 @@ const About = () => {
     address: 'Yaoundé, Cameroun'
   };
 
-  // Réseaux sociaux
   const socialLinks = [
     { 
       icon: FiFacebook, 
@@ -547,22 +560,66 @@ const About = () => {
               <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
                 <h2 className="text-2xl font-bold text-green-900 mb-1">Nos Partenaires</h2>
                 <p className="text-gray-500 mb-8 text-sm">Ils nous accompagnent dans la réalisation de nos missions</p>
-                <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+                
+                <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
                   {partners.map((partner, index) => (
-                    <motion.div
+                    <motion.a
                       key={index}
+                      href={partner.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       initial={{ opacity: 0, y: 10 }}
                       whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
                       transition={{ delay: index * 0.05 }}
-                      className="bg-gray-50 rounded-xl p-5 border border-gray-100 text-center hover:shadow-md transition-all hover:bg-white"
+                      whileHover={{ y: -5, scale: 1.02 }}
+                      className="bg-gray-50 rounded-xl p-6 border border-gray-100 text-center hover:shadow-lg transition-all duration-300 hover:bg-white group cursor-pointer flex flex-col items-center justify-center"
                     >
-                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <FiStar className="w-6 h-6 text-green-700" />
+                      {/* Logo du partenaire */}
+                      <div className="w-24 h-24 flex items-center justify-center mb-4 p-3 bg-white rounded-xl shadow-sm group-hover:shadow-md transition-shadow duration-300">
+                        <img 
+                          src={partner.logo} 
+                          alt={`Logo ${partner.name}`}
+                          className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = '/images/default_profile.png';
+                          }}
+                        />
                       </div>
-                      <p className="font-semibold text-gray-800">{partner.name}</p>
-                      <p className="text-xs text-gray-500">{partner.sector}</p>
-                    </motion.div>
+                      
+                      {/* Nom du partenaire */}
+                      <p className="font-semibold text-gray-800 group-hover:text-green-700 transition-colors duration-300">
+                        {partner.name}
+                      </p>
+                      
+                      {/* Secteur d'activité */}
+                      <p className="text-xs text-gray-500 mt-1">{partner.sector}</p>
+                      
+                      {/* Lien externe */}
+                      <div className="mt-3 flex items-center gap-1 text-xs text-green-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <FiExternalLink className="w-3 h-3" />
+                        <span>Visiter le site</span>
+                      </div>
+                    </motion.a>
                   ))}
+                </div>
+
+                {/* Message pour devenir partenaire */}
+                <div className="mt-10 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100 text-center">
+                  <h3 className="text-lg font-bold text-green-900 mb-2">
+                    Devenir Partenaire
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Vous souhaitez collaborer avec l'AIFASA 17 ? Contactez-nous pour explorer les possibilités de partenariat.
+                  </p>
+                  <a 
+                    href="mailto:association.fasa17@gmail.com"
+                    className="inline-flex items-center gap-2 bg-green-700 hover:bg-green-800 text-white font-semibold text-sm px-6 py-2.5 rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5"
+                  >
+                    <FiMail className="w-4 h-4" />
+                    Nous contacter
+                  </a>
                 </div>
               </div>
             </motion.div>

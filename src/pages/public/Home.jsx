@@ -19,7 +19,7 @@ const Home = () => {
     { icon: FiUsers, value: '35+', label: 'Membres Actifs' },
     { icon: FiBriefcase, value: '3', label: 'Projets AGR' },
     { icon: FiFileText, value: '100+', label: 'Documents Partagés' },
-    { icon: FiAward, value: '5+', label: 'Partenariats Stratégiques' },
+    { icon: FiAward, value: '3+', label: 'Partenariats Stratégiques' },
   ];
 
   const features = [
