@@ -1,0 +1,653 @@
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  FiCalendar, 
+  FiUsers, 
+  FiTarget, 
+  FiAward,
+  FiBriefcase,
+  FiHeart,
+  FiGlobe,
+  FiTrendingUp,
+  FiMessageCircle,
+  FiShield,
+  FiUser,
+  FiMonitor,
+  FiDatabase,
+  FiChevronDown,
+  FiChevronUp,
+  FiArrowRight,
+  FiMapPin,
+  FiMail,
+  FiPhone,
+  FiUserCheck,
+  FiStar,
+  FiLink,
+  FiFacebook,
+  FiYoutube
+} from 'react-icons/fi';
+import { FaLinkedin } from 'react-icons/fa';
+
+const About = () => {
+  const [activeTab, setActiveTab] = useState('presentation');
+  const [expandedCommission, setExpandedCommission] = useState(null);
+
+  // ============ DONNÉES ============
+  
+  // Statistiques clés
+  const stats = [
+    { icon: FiUsers, value: '50+', label: 'Membres actifs' },
+    { icon: FiBriefcase, value: '15+', label: 'Projets réalisés' },
+    { icon: FiAward, value: '5+', label: 'Partenariats' },
+    { icon: FiCalendar, value: '7 ans', label: "D'existence" },
+  ];
+
+  // Membres du Bureau Exécutif avec photos
+  const executiveBoard = [
+    { 
+      name: 'EDONGO ABEGA Davy Fabrice', 
+      role: 'Président',
+      photo: '/images/members/NDONGO_Davy.jpeg'
+    },
+    { 
+      name: 'BIKAÏ', 
+      role: 'Vice-Président',
+      photo: '/images/members/default_profile.jpg'
+    },
+    { 
+      name: 'ESSOLA ONJA\'A Félix', 
+      role: 'Secrétaire Général',
+      photo: '/images/members/ESSOLA_Felix.png'
+    },
+    { 
+      name: 'KOBLA Anne Stéphanie', 
+      role: 'Secrétaire Générale Adjointe',
+      photo: '/images/members/Kobla_profile.jpg'
+    },
+    { 
+      name: 'NGIJOL BALENG Roland Dalex', 
+      role: 'Trésorier',
+      photo: '/images/members/NGIDJOL.jpg'
+    },
+    { 
+      name: 'KUENBOU Jacques', 
+      role: 'Commissaire aux Comptes',
+      photo: '/images/members/Kuenbou_profile.png'
+    },
+    { 
+      name: 'FONJI TANYA FOLEFAC', 
+      role: 'Censeur',
+      photo: '/images/members/Fonji_profile.jpg'
+    },
+  ];
+
+  const historyEvents = [
+    { year: '2019', event: 'Création de l\'association AIFASA 17' },
+    { year: '2020', event: 'Première Assemblée Générale constitutive' },
+    { year: '2021', event: 'Lancement des premiers projets collectifs' },
+    { year: '2023', event: 'Renforcement des partenariats institutionnels' },
+    { year: '2025', event: 'Évolution et renouvellement des instances dirigeantes' },
+  ];
+
+  const statutoryBodies = [
+    { 
+      icon: FiUsers, 
+      title: 'Assemblée Générale', 
+      role: 'Organe Suprême',
+      description: 'Constituée de l\'ensemble des membres actifs et honoraires. Elle se réunit régulièrement pour valider les bilans, voter le budget et définir les grandes orientations stratégiques de l\'association.' 
+    },
+    { 
+      icon: FiBriefcase, 
+      title: 'Conseil Exécutif', 
+      role: 'Pilotage & Vision',
+      description: 'Élu par l\'Assemblée Générale. Il traduit les orientations en actions concrètes, supervise la gestion financière et coordonne les commissions opérationnelles.' 
+    },
+    { 
+      icon: FiUser, 
+      title: 'Président', 
+      role: 'Représentation Légale',
+      description: 'Représentant légal et diplomatique de l\'AIFASA 17. Il dispose des pouvoirs nécessaires pour engager l\'association vis-à-vis des tiers et garantir la cohésion interne.' 
+    },
+    { 
+      icon: FiShield, 
+      title: 'Comité de Surveillance', 
+      role: 'Conformité & Discipline',
+      description: 'Organe indépendant chargé de veiller à la stricte application des Statuts et du Règlement Intérieur. Il maintient l\'ordre et assure la médiation des conflits internes.' 
+    }
+  ];
+
+  const commissions = [
+    { 
+      id: 'agr',
+      name: 'Commission AGR', 
+      icon: FiTrendingUp, 
+      description: 'Activités Génératrices de Revenus',
+      mission: 'Conçoit et pilote les projets d\'investissement collectifs visant à garantir l\'autonomie financière durable de l\'AIFASA 17.',
+      kpi: 'Développer des projets rentables et durables pour l\'association.'
+    },
+    { 
+      id: 'num',
+      name: 'Commission Numérique', 
+      icon: FiMonitor, 
+      description: 'Digitalisation et plateformes',
+      mission: 'Architecte de l\'écosystème technologique. Chargée du développement et de la maintenance des outils numériques et de l\'automatisation de l\'administration.',
+      kpi: 'Déployer une plateforme numérique moderne et sécurisée.'
+    },
+    { 
+      id: 'data',
+      name: 'Commission Données & Recherche', 
+      icon: FiDatabase, 
+      description: 'Base de données et statistiques',
+      mission: 'Centre d\'intelligence stratégique. Administre la base de données des profils et compétences des membres, et produit des analyses utiles.',
+      kpi: 'Cartographier le capital humain de l\'association pour faciliter le réseautage.'
+    },
+    { 
+      id: 'social',
+      name: 'Commission Action Sociale', 
+      icon: FiHeart, 
+      description: 'Solidarité et entraide',
+      mission: 'Cœur solidaire de la communauté. Gère les dispositifs d\'entraide, organise les chaînes de solidarité et structure les programmes d\'accompagnement.',
+      kpi: 'Renforcer la cohésion et la solidarité entre les membres.'
+    },
+    { 
+      id: 'comm',
+      name: 'Commission Communication', 
+      icon: FiMessageCircle, 
+      description: 'Visibilité et relations publiques',
+      mission: 'Vitrine officielle et porte-voix de l\'AIFASA 17. Gère l\'image de marque et anime les relations publiques.',
+      kpi: 'Accroître le rayonnement de l\'association et attirer des partenaires.'
+    },
+  ];
+
+  const partners = [
+    { name: 'MINADER', sector: 'Agriculture' },
+    { name: 'MINFOF', sector: 'Forêts & Faune' },
+    { name: 'MINEPIA', sector: 'Élevage & Pêche' },
+    { name: 'Rainforest Alliance', sector: 'Conservation' },
+    { name: 'African Wildlife Foundation', sector: 'Conservation' },
+    { name: 'IITA', sector: 'Recherche agricole' },
+  ];
+
+  const galleryImages = [
+    { url: 'https://images.unsplash.com/photo-1595515106969-1ce29566ff1c?auto=format&fit=crop&q=80&w=800', caption: 'Travaux de terrain en agroforesterie' },
+    { url: 'https://res.cloudinary.com/djhyztec8/image/upload/v1782068840/WhatsApp_Image_2026-06-21_at_19.51.37_frfzdi.jpg', caption: 'Session de réorientation des activités' },
+    { url: 'https://res.cloudinary.com/djhyztec8/image/upload/v1782070025/IMG_1458_qhge7f.jpg', caption: 'Projets piscicoles' },
+     { url: 'https://res.cloudinary.com/djhyztec8/image/upload/v1782067779/WhatsApp_Image_2026-06-21_at_19.40.41_je2cba.jpg', caption: 'Etude d\'impacts environnemetales route Akom 2 -Kribi ' },
+      { url: 'https://res.cloudinary.com/djhyztec8/image/upload/v1782071069/PXL_20250703_074528129_t1kixn.jpg', caption: 'Formation aux métiers piscicoles' },
+       { url: 'https://res.cloudinary.com/djhyztec8/image/upload/v1782069784/IMG_2835_jagn6a.jpg', caption: 'Projets agricoles durables' },
+  ];
+
+  const contactInfo = {
+    email: 'association.fasa17@gmail.com',
+    phone: '+237 620 370 286',
+    address: 'Yaoundé, Cameroun'
+  };
+
+  // Réseaux sociaux
+  const socialLinks = [
+    { 
+      icon: FiFacebook, 
+      url: 'https://www.facebook.com/share/1BDMdB7s4y/', 
+      label: 'Facebook',
+      color: 'bg-blue-600 hover:bg-blue-700'
+    },
+    { 
+      icon: FaLinkedin, 
+      url: 'https://linkedin.com/company/aifasa17', 
+      label: 'LinkedIn',
+      color: 'bg-blue-700 hover:bg-blue-800'
+    },
+    { 
+      icon: FiYoutube, 
+      url: 'https://youtube.com/@aifasa17', 
+      label: 'YouTube',
+      color: 'bg-red-600 hover:bg-red-700'
+    },
+  ];
+
+  // ============ VARIANTS ============
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } }
+  };
+
+  const toggleCommission = (id) => {
+    setExpandedCommission(expandedCommission === id ? null : id);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden selection:bg-green-700 selection:text-white">
+      {/* Hero */}
+      <section className="relative bg-gradient-to-br from-green-900 via-green-800 to-emerald-900 text-white py-24 px-4 overflow-hidden">
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        <div className="container mx-auto max-w-6xl text-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">À Propos de l'AIFASA 17</h1>
+            <div className="h-1 w-20 bg-emerald-400 mx-auto mb-6 rounded"></div>
+            <p className="text-xl text-green-100 max-w-3xl mx-auto font-light">
+              Association des Ingénieurs Agronomes et Forestiers de la 17ème promotion de la FASA
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Statistiques clés */}
+      <section className="container mx-auto max-w-6xl px-4 -mt-8 relative z-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {stats.map((stat, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow"
+            >
+              <stat.icon className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
+              <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
+              <p className="text-sm text-gray-500">{stat.label}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Navigation des Onglets */}
+      <div className="container mx-auto max-w-6xl px-4 py-8">
+        <div className="flex flex-wrap justify-center bg-white rounded-xl shadow-md p-2 max-w-2xl mx-auto border border-gray-100">
+          {['presentation', 'bureau', 'organisation', 'partenaires', 'contact'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all duration-300 text-sm ${
+                activeTab === tab
+                  ? 'bg-green-700 text-white shadow-md'
+                  : 'text-gray-600 hover:bg-green-50'
+              }`}
+            >
+              {tab === 'presentation' && <FiTarget className="w-4 h-4" />}
+              {tab === 'bureau' && <FiUserCheck className="w-4 h-4" />}
+              {tab === 'organisation' && <FiBriefcase className="w-4 h-4" />}
+              {tab === 'partenaires' && <FiLink className="w-4 h-4" />}
+              {tab === 'contact' && <FiMail className="w-4 h-4" />}
+              {tab === 'presentation' ? 'Présentation' : 
+               tab === 'bureau' ? 'Bureau' : 
+               tab === 'organisation' ? 'Gouvernance' : 
+               tab === 'partenaires' ? 'Partenaires' : 'Contact'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Contenu */}
+      <section className="pb-16 px-4 max-w-6xl mx-auto">
+        <AnimatePresence mode="wait">
+
+          {/* ====== TAB PRESENTATION ====== */}
+          {activeTab === 'presentation' && (
+            <motion.div
+              key="presentation"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-8"
+            >
+              {/* Présentation Générale */}
+              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <h2 className="text-3xl font-bold text-green-900 mb-4">Notre Identité</h2>
+                <p className="text-gray-700 leading-relaxed text-lg">
+                  L'Association des Ingénieurs Agronomes et Forestiers de la 17ème promotion de la FASA (AIFASA 17) 
+                  est une organisation apolitique et à but non lucratif. Elle est le creuset de l'excellence collective, 
+                  conçue pour catalyser le développement socio-économique de ses membres à travers des synergies innovantes.
+                </p>
+              </div>
+
+              {/* Galerie */}
+              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <h3 className="text-2xl font-bold text-green-900 mb-6 flex items-center gap-2">
+                  <FiGlobe className="text-emerald-600" /> L'Association en Actions
+                </h3>
+                <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+                  {galleryImages.map((img, idx) => (
+                    <motion.div 
+                      key={idx}
+                      whileHover={{ y: -5 }}
+                      className="relative rounded-xl overflow-hidden shadow-md group h-48 cursor-pointer"
+                    >
+                      <img src={img.url} alt={img.caption} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90 transition-opacity"></div>
+                      <p className="absolute bottom-3 left-3 right-3 text-xs text-white font-medium">{img.caption}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Historique */}
+              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <h2 className="text-2xl font-bold text-green-900 mb-8 flex items-center gap-2">
+                  <FiCalendar className="text-green-700" /> Notre Trajectoire
+                </h2>
+                <div className="relative border-l-2 border-green-200 ml-4 md:ml-6 space-y-8">
+                  {historyEvents.map((event, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -30 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.1 }}
+                      className="relative pl-8"
+                    >
+                      <div className="absolute -left-[11px] top-1 w-5 h-5 bg-green-600 border-4 border-white rounded-full shadow-md animate-pulse"></div>
+                      <div className="bg-gray-50 p-5 rounded-xl border border-gray-100 hover:shadow-md transition-shadow">
+                        <span className="inline-block px-3 py-1 bg-green-100 text-green-800 font-bold text-xs rounded-full mb-2">{event.year}</span>
+                        <p className="text-gray-700 font-medium">{event.event}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ====== TAB BUREAU ====== */}
+          {activeTab === 'bureau' && (
+            <motion.div
+              key="bureau"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <h2 className="text-2xl font-bold text-green-900 mb-1">Bureau Exécutif</h2>
+                <p className="text-gray-500 mb-8 text-sm">L'équipe dirigeante de l'AIFASA 17</p>
+                <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+                  {executiveBoard.map((member, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all hover:-translate-y-1 text-center"
+                    >
+                      <div className="flex flex-col items-center">
+                        <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-green-100 shadow-md mb-3">
+                          <img 
+                            src={member.photo} 
+                            alt={member.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = '/images/default_profile.png';
+                            }}
+                          />
+                        </div>
+                        <p className="font-semibold text-gray-800 text-sm">{member.name}</p>
+                        <p className="text-xs text-green-600 font-medium bg-green-50 px-3 py-1 rounded-full mt-1">
+                          {member.role}
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ====== TAB ORGANISATION ====== */}
+          {activeTab === 'organisation' && (
+            <motion.div
+              key="organisation"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-8"
+            >
+              {/* Organes Statutaires */}
+              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <h2 className="text-2xl font-bold text-green-900 mb-1">Gouvernance & Organes Statutaires</h2>
+                <p className="text-gray-500 mb-6 text-sm">Une structure organisationnelle transparente, démocratique et rigoureuse au service du bien commun.</p>
+                
+                <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid md:grid-cols-2 gap-6">
+                  {statutoryBodies.map((body, index) => {
+                    const Icon = body.icon;
+                    return (
+                      <motion.div
+                        key={index}
+                        variants={itemVariants}
+                        whileHover={{ y: -2 }}
+                        className="bg-gray-50 rounded-xl p-6 border border-gray-100 shadow-sm flex gap-4 items-start hover:bg-white hover:shadow-md transition-all duration-300 relative overflow-hidden group"
+                      >
+                        <div className="p-3 bg-green-50 rounded-xl flex-shrink-0 text-green-700 group-hover:bg-green-700 group-hover:text-white transition-colors duration-300">
+                          <Icon className="w-6 h-6" />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h4 className="font-bold text-gray-800 text-base">{body.title}</h4>
+                            <span className="px-2 py-0.5 text-[10px] font-semibold tracking-wide bg-gray-200/60 text-gray-600 rounded">
+                              {body.role}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 pt-1 leading-relaxed">{body.description}</p>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </motion.div>
+              </div>
+
+              {/* Commissions */}
+              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-green-900">Commissions Spécialisées</h2>
+                    <p className="text-gray-500 text-sm mt-0.5">Les pôles opérationnels et techniques au cœur de nos actions.</p>
+                  </div>
+                  <span className="self-start sm:self-auto px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-md border border-emerald-100">
+                    5 Pôles d'Action
+                  </span>
+                </div>
+                
+                <div className="space-y-4">
+                  {commissions.map((comm, index) => {
+                    const Icon = comm.icon;
+                    const isExpanded = expandedCommission === comm.id;
+                    return (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 10 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: index * 0.05 }}
+                        className={`rounded-xl border transition-all duration-300 overflow-hidden ${
+                          isExpanded 
+                            ? 'bg-gradient-to-br from-green-50/40 to-white border-green-500/40 shadow-md' 
+                            : 'bg-gray-50 border-gray-100/80 hover:bg-white hover:shadow-sm'
+                        }`}
+                      >
+                        <div 
+                          onClick={() => toggleCommission(comm.id)}
+                          className="flex items-center justify-between p-5 cursor-pointer select-none"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className={`p-2.5 rounded-lg transition-colors duration-300 ${isExpanded ? 'bg-green-700 text-white' : 'bg-emerald-50 text-emerald-700'}`}>
+                              <Icon className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-gray-800 text-base">{comm.name}</h3>
+                              <p className="text-xs text-gray-500 font-medium">{comm.description}</p>
+                            </div>
+                          </div>
+                          <div className="text-gray-400 p-1 hover:text-gray-600 transition-colors">
+                            {isExpanded ? <FiChevronUp className="w-5 h-5" /> : <FiChevronDown className="w-5 h-5" />}
+                          </div>
+                        </div>
+
+                        <AnimatePresence initial={false}>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.25, ease: "easeInOut" }}
+                            >
+                              <div className="px-5 pb-5 pt-1 border-t border-gray-100 grid md:grid-cols-2 gap-4 text-sm bg-white/50">
+                                <div className="space-y-1.5 p-3 rounded-lg bg-gray-50 border border-gray-100/60">
+                                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Mission Principale</h4>
+                                  <p className="text-gray-600 leading-relaxed">{comm.mission}</p>
+                                </div>
+                                <div className="space-y-1.5 p-3 rounded-lg bg-green-50/30 border border-green-100/40">
+                                  <h4 className="text-xs font-bold text-green-700 uppercase tracking-wider">Objectif Clé</h4>
+                                  <p className="text-green-900/90 font-medium leading-relaxed">{comm.kpi}</p>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Call to action */}
+              <div className="bg-gradient-to-br from-green-900 to-emerald-950 rounded-2xl p-8 text-center text-white shadow-xl max-w-3xl mx-auto border border-green-800/20">
+                <h3 className="text-xl md:text-2xl font-bold">Unir nos forces pour un développement durable</h3>
+                <p className="text-green-100/80 text-sm mt-2 max-w-xl mx-auto">
+                  Les commissions de travail sont ouvertes à tous les membres souhaitant contribuer activement à la vie de l'association.
+                </p>
+                <div className="mt-5">
+                  <button className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold text-sm px-5 py-2.5 rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5">
+                    S'engager dans une commission
+                    <FiArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ====== TAB PARTENAIRES ====== */}
+          {activeTab === 'partenaires' && (
+            <motion.div
+              key="partenaires"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <h2 className="text-2xl font-bold text-green-900 mb-1">Nos Partenaires</h2>
+                <p className="text-gray-500 mb-8 text-sm">Ils nous accompagnent dans la réalisation de nos missions</p>
+                <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {partners.map((partner, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="bg-gray-50 rounded-xl p-5 border border-gray-100 text-center hover:shadow-md transition-all hover:bg-white"
+                    >
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <FiStar className="w-6 h-6 text-green-700" />
+                      </div>
+                      <p className="font-semibold text-gray-800">{partner.name}</p>
+                      <p className="text-xs text-gray-500">{partner.sector}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ====== TAB CONTACT ====== */}
+          {activeTab === 'contact' && (
+            <motion.div
+              key="contact"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+              className="max-w-4xl mx-auto"
+            >
+              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <h2 className="text-2xl font-bold text-green-900 mb-6 text-center">Contactez-nous</h2>
+                <p className="text-gray-500 text-center mb-8">Nous sommes à votre écoute pour toute question ou collaboration</p>
+
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div className="bg-gray-50 rounded-xl p-6 text-center hover:shadow-md transition-all hover:bg-white border border-gray-100">
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <FiMail className="w-6 h-6 text-green-700" />
+                    </div>
+                    <h4 className="font-semibold text-gray-800 mb-1">Email</h4>
+                    <a href={`mailto:${contactInfo.email}`} className="text-sm text-green-600 hover:underline break-all">
+                      {contactInfo.email}
+                    </a>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-xl p-6 text-center hover:shadow-md transition-all hover:bg-white border border-gray-100">
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <FiPhone className="w-6 h-6 text-green-700" />
+                    </div>
+                    <h4 className="font-semibold text-gray-800 mb-1">Téléphone</h4>
+                    <a href={`tel:${contactInfo.phone}`} className="text-sm text-green-600 hover:underline">
+                      {contactInfo.phone}
+                    </a>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-xl p-6 text-center hover:shadow-md transition-all hover:bg-white border border-gray-100">
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <FiMapPin className="w-6 h-6 text-green-700" />
+                    </div>
+                    <h4 className="font-semibold text-gray-800 mb-1">Adresse</h4>
+                    <p className="text-sm text-gray-600">{contactInfo.address}</p>
+                  </div>
+                </div>
+
+                {/* Réseaux sociaux */}
+                <div className="mt-6">
+                  <h4 className="text-center font-semibold text-gray-700 mb-4">Suivez-nous sur les réseaux</h4>
+                  <div className="flex justify-center gap-4">
+                    {socialLinks.map((social, index) => (
+                      <motion.a
+                        key={index}
+                        href={social.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={`${social.color} text-white p-3 rounded-full shadow-lg transition-all duration-300`}
+                        title={social.label}
+                      >
+                        <social.icon className="w-6 h-6" />
+                      </motion.a>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-8 p-6 bg-green-50 rounded-xl border border-green-100 text-center">
+                  <p className="text-sm text-gray-600">
+                    <span className="font-semibold">Bureau Exécutif AIFASA 17</span>
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    association.fasa17@gmail.com • +237 620 370 286 / +237 696 322 069
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </section>
+    </div>
+  );
+};
+
+export default About;
