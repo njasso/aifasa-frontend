@@ -1,4 +1,4 @@
-// services/api.js
+// src/services/api.js
 import axios from 'axios';
 
 // ============================================
@@ -7,7 +7,7 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_BASE_URL 
   ? `${process.env.REACT_APP_API_BASE_URL}/api`
-  : 'http://localhost:5000/api';
+  : 'https://aifasa-backend.onrender.com/api'; // URL de production par défaut
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
@@ -21,7 +21,8 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
+  withCredentials: false, // CHANGÉ À false - on utilise JWT dans les headers
+  timeout: 30000, // 30 secondes timeout
 });
 
 // ============================================
@@ -36,14 +37,14 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
-    // ✅ Pour FormData, supprimer Content-Type
-    if (config.data && config.data instanceof FormData) {
+    // Pour FormData, supprimer Content-Type (axios le gère)
+    if (config.data instanceof FormData) {
       delete config.headers['Content-Type'];
     }
     
-    // ✅ Logs uniquement en développement
+    // Logs uniquement en développement
     if (isDevelopment) {
-      console.log(`📤 ${config.method.toUpperCase()} ${config.baseURL}${config.url}`);
+      console.log(`📤 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
     }
     return config;
   },
@@ -63,6 +64,7 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response) {
+      // Le serveur a répondu avec un code d'erreur
       console.error(`❌ Erreur ${error.response.status}:`, error.response.data);
       
       if (error.response.status === 401) {
@@ -73,7 +75,8 @@ api.interceptors.response.use(
         }
       }
     } else if (error.request) {
-      console.error('❌ Pas de réponse du serveur:', error.request);
+      // Pas de réponse du serveur
+      console.error('❌ Pas de réponse du serveur:', error.message);
     } else {
       console.error('❌ Erreur:', error.message);
     }
