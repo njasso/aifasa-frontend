@@ -347,11 +347,11 @@ const expertiseDomains = [
 
   // Images d'illustration pour chaque domaine
   const expertiseImages = {
-  agroforestry: 'https://images.unsplash.com/photo-1595515106969-1ce29566ff1c?auto=format&fit=crop&q=80&w=800',
+  agroforestry: 'https://res.cloudinary.com/djhyztec8/image/upload/v1782133330/WhatsApp_Image_2026-06-22_at_06.45.41_1_ydjnjn.jpg',
   forestry: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&q=80&w=800',
   ecology: 'https://images.unsplash.com/photo-1504006833117-8886a355efbf?auto=format&fit=crop&q=80&w=800',
-  agroeconomy: 'https://images.unsplash.com/photo-1578574017019-6b7a0cb5f3f3?auto=format&fit=crop&q=80&w=800',
-  aquaculture: 'https://images.unsplash.com/photo-1542524602-97c41b1a9e70?auto=format&fit=crop&q=80&w=800',
+  agroeconomy: 'https://res.cloudinary.com/djhyztec8/image/upload/v1754815391/front-view-plants-with-coins-stacked-dirt_erjelb.jpg',
+  aquaculture: 'https://res.cloudinary.com/djhyztec8/image/upload/v1782069915/IMG_9967_dobcho.jpg',
   digital: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800'
 };
 
@@ -593,7 +593,7 @@ const expertiseDomains = [
               <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
                 <div className="relative h-56 overflow-hidden">
                   <img 
-                    src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=1200" 
+                    src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=1200" 
                     alt="QHSE - Conseil et certification ISO"
                     className="w-full h-full object-cover"
                   />
