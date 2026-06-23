@@ -30,7 +30,8 @@
     script-src 'self' 'unsafe-inline' 'unsafe-eval';
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     font-src 'self' https://fonts.gstatic.com;
-    img-src 'self' data: https: blob: https://res.cloudinary.com;
+    img-src 'self' data: https: blob: https://res.cloudinary.com https://images.unsplash.com;
+    frame-src 'self' https://res.cloudinary.com https://docs.google.com;
     connect-src 'self' https://aifasa-backend.onrender.com https://*.onrender.com;
     media-src 'self';
     object-src 'none';
@@ -55,23 +56,105 @@
   -->
   
   <!-- ========== SEO ========== -->
-  <meta name="description" content="AIFASA 17 - Plateforme de gestion de l'Association des Ingénieurs Agronomes et Forestiers de la 17ème promotion de la FASA">
+  <meta name="description" content="AIFASA 17 - Association des Ingénieurs Agronomes et Forestiers de la 17ème promotion de la FASA. Plateforme de gestion et de mise en relation des experts du secteur agricole et forestier au Cameroun.">
+  <meta name="keywords" content="AIFASA, ingénieurs agronomes, forestiers, FASA, Cameroun, agriculture, foresterie, développement durable, agroforesterie, aquaculture, QHSE">
   <meta name="robots" content="index, follow">
   <meta name="author" content="AIFASA 17">
+  <meta name="language" content="fr">
+  <meta name="revisit-after" content="7 days">
   
   <!-- Open Graph -->
-  <meta property="og:title" content="AIFASA 17 - Plateforme de Gestion">
-  <meta property="og:description" content="Association des Ingénieurs Agronomes et Forestiers de la 17ème promotion de la FASA">
+  <meta property="og:title" content="AIFASA 17 - Association des Ingénieurs Agronomes et Forestiers">
+  <meta property="og:description" content="Association des Ingénieurs Agronomes et Forestiers de la 17ème promotion de la FASA. Expertise en productions végétales, aménagement forestier, écologie, agro-économie, aquaculture et solutions numériques.">
   <meta property="og:image" content="%PUBLIC_URL%/images/logo.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta property="og:url" content="https://aifasa17.cm">
   <meta property="og:type" content="website">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:site_name" content="AIFASA 17">
   
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AIFASA 17 - Association des Ingénieurs Agronomes et Forestiers">
+  <meta name="twitter:description" content="Association des Ingénieurs Agronomes et Forestiers de la 17ème promotion de la FASA. Expertise en développement durable au Cameroun.">
+  <meta name="twitter:image" content="%PUBLIC_URL%/images/logo.png">
+  
+  <!-- ========== PERFORMANCE & PRÉCHARGEMENT ========== -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- ========== STRUCTURED DATA (JSON-LD) ========== -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "AIFASA 17",
+      "alternateName": "Association des Ingénieurs Agronomes et Forestiers de la 17ème promotion de la FASA",
+      "url": "https://aifasa17.cm",
+      "logo": "https://aifasa17.cm/images/logo.png",
+      "description": "Association des Ingénieurs Agronomes et Forestiers de la 17ème promotion de la FASA. Expertise en productions végétales, aménagement forestier, écologie, agro-économie, aquaculture et solutions numériques.",
+      "foundingDate": "2021",
+      "founders": [
+        {
+          "@type": "Person",
+          "name": "EDONGO ABEGA Davy Fabrice"
+        }
+      ],
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Yaoundé",
+        "addressCountry": "CM"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "association.fasa17@gmail.com",
+        "telephone": "+237620370286",
+        "contactType": "contact"
+      },
+      "sameAs": [
+        "https://www.facebook.com/share/1BDMdB7s4y/",
+        "https://linkedin.com/company/aifasa17",
+        "https://youtube.com/@aifasa17"
+      ]
+    }
+  </script>
+  
+  <!-- ========== POLICE DE FALLBACK ========== -->
+  <style>
+    /* Fallback fonts */
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+    }
+    /* Smooth scrolling */
+    html {
+      scroll-behavior: smooth;
+    }
+    /* Improve rendering */
+    * {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+  </style>
 </head>
 <body class="bg-gray-50 antialiased">
   <noscript>
-    <div style="text-align:center; padding:20px; font-family:Arial,sans-serif;">
-      <h1>JavaScript requis</h1>
-      <p>Vous devez activer JavaScript pour accéder à la plateforme AIFASA 17.</p>
+    <div style="text-align:center; padding:40px 20px; font-family:Arial,sans-serif; background:#f8f9fa; min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+      <img src="/images/logo.png" alt="AIFASA 17" style="max-width:150px; margin-bottom:20px;">
+      <h1 style="color:#064e3b; font-size:24px; margin-bottom:10px;">JavaScript est requis</h1>
+      <p style="color:#6b7280; max-width:400px; margin:0 auto; line-height:1.6;">
+        Vous devez activer JavaScript pour accéder à la plateforme AIFASA 17. 
+        Veuillez activer JavaScript dans les paramètres de votre navigateur.
+      </p>
+      <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+        <a href="https://www.enable-javascript.com/fr/" target="_blank" style="background:#064e3b; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; font-size:14px;">
+          Activer JavaScript
+        </a>
+        <a href="mailto:association.fasa17@gmail.com" style="background:#e5e7eb; color:#374151; padding:10px 20px; border-radius:8px; text-decoration:none; font-size:14px;">
+          Nous contacter
+        </a>
+      </div>
     </div>
   </noscript>
   <div id="root"></div>
