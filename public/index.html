@@ -15,15 +15,18 @@
   <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/images/favicon-16x16.png">
   <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/images/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="96x96" href="%PUBLIC_URL%/images/favicon-96x96.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="%PUBLIC_URL%/images/favicon-192x192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="%PUBLIC_URL%/images/favicon-512x512.png">
   
   <!-- Apple Touch Icon (iOS) -->
   <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/images/apple-touch-icon.png">
   
-  <!-- Android/Chrome -->
+  <!-- Android/Chrome PWA -->
   <link rel="manifest" href="%PUBLIC_URL%/manifest.json">
   <meta name="theme-color" content="#064e3b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
   
   <!-- ========== SÉCURITÉ ========== -->
   
@@ -37,11 +40,10 @@
     connect-src 'self' https://aifasa-backend.onrender.com https://*.onrender.com;
     media-src 'self';
     object-src 'none';
-    frame-src 'none';
+    frame-ancestors 'none';
   ">
   
-  <!-- Anti-clickjacking -->
-  <meta http-equiv="X-Frame-Options" content="DENY">
+  <!-- ❌ X-Frame-Options retiré (ne fonctionne pas en meta, configuré côté serveur/Netlify) -->
   
   <!-- XSS Protection -->
   <meta http-equiv="X-XSS-Protection" content="1; mode=block">
@@ -75,7 +77,7 @@
 </head>
 <body class="bg-gray-50 antialiased">
   <noscript>
-    <div style="text-align:center; padding:20px; font-family:Arial;">
+    <div style="text-align:center; padding:20px; font-family:Arial,sans-serif;">
       <h1>JavaScript requis</h1>
       <p>Vous devez activer JavaScript pour accéder à la plateforme AIFASA 17.</p>
     </div>
