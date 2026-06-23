@@ -5,24 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AIFASA 17 - Plateforme de Gestion</title>
   
-  <!-- ========== FAVICONS (Optimisés pour éviter les crashs) ========== -->
-  
-  <!-- Favicon Standard (.ico) -->
+  <!-- ========== FAVICONS ========== -->
   <link rel="icon" href="%PUBLIC_URL%/favicon.ico" type="image/x-icon">
   <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico" type="image/x-icon">
-  
-  <!-- Favicon PNG (Recommandé pour les navigateurs modernes) -->
   <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/images/favicon-16x16.png">
   <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/images/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="96x96" href="%PUBLIC_URL%/images/favicon-96x96.png">
   <link rel="icon" type="image/png" sizes="192x192" href="%PUBLIC_URL%/images/favicon-192x192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="%PUBLIC_URL%/images/favicon-512x512.png">
-  
-  <!-- Apple Touch Icon (iOS) -->
   <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/images/apple-touch-icon.png">
-  
-  <!-- Android/Chrome PWA -->
   <link rel="manifest" href="%PUBLIC_URL%/manifest.json">
+  
+  <!-- PWA -->
   <meta name="theme-color" content="#064e3b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -30,7 +24,7 @@
   
   <!-- ========== SÉCURITÉ ========== -->
   
-  <!-- Content Security Policy -->
+  <!-- Content Security Policy (level 2 - supporté en meta) -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
     script-src 'self' 'unsafe-inline' 'unsafe-eval';
@@ -40,27 +34,25 @@
     connect-src 'self' https://aifasa-backend.onrender.com https://*.onrender.com;
     media-src 'self';
     object-src 'none';
-    frame-ancestors 'none';
   ">
-  
-  <!-- ❌ X-Frame-Options retiré (ne fonctionne pas en meta, configuré côté serveur/Netlify) -->
   
   <!-- XSS Protection -->
   <meta http-equiv="X-XSS-Protection" content="1; mode=block">
   
-  <!-- MIME Type sniffing -->
+  <!-- Prevent MIME type sniffing -->
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   
   <!-- Referrer Policy -->
   <meta name="referrer" content="strict-origin-when-cross-origin">
   
   <!-- Permissions Policy -->
-  <meta http-equiv="Permissions-Policy" content="
-    camera=(),
-    microphone=(),
-    geolocation=(),
-    payment=()
-  ">
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()">
+  
+  <!-- 
+    ⚠️ NON supportés en <meta> → Configurés côté serveur (Helmet) + Netlify (netlify.toml) :
+    - X-Frame-Options: DENY
+    - frame-ancestors 'none' (CSP level 3)
+  -->
   
   <!-- ========== SEO ========== -->
   <meta name="description" content="AIFASA 17 - Plateforme de gestion de l'Association des Ingénieurs Agronomes et Forestiers de la 17ème promotion de la FASA">

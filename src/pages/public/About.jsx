@@ -29,7 +29,13 @@ import {
   FiExternalLink,
   FiEye,
   FiActivity,
-  FiGrid
+  FiGrid,
+  FiCheckCircle,
+  FiAperture,
+  FiSun,
+  FiDroplet,
+  FiPieChart,
+  FiPackage
 } from 'react-icons/fi';
 import { FaLinkedin } from 'react-icons/fa';
 
@@ -204,6 +210,69 @@ const About = () => {
     },
   ];
 
+  // ============ DONNÉES EXPERTISES AVEC DESCRIPTIONS UNIQUEMENT ============
+  // ============ DONNÉES EXPERTISES AVEC DESCRIPTIONS ============
+const expertiseDomains = [
+  {
+    id: 'agroforestry',
+    icon: FiPackage,
+    title: 'Productions Végétales & Agroforesterie',
+    color: 'from-emerald-500 to-green-700',
+    description: "Expertise en techniques de production végétale, gestion de pépinières, agroforesterie, et conseil agricole. Les membres de ce domaine maîtrisent les systèmes de production durables, la réhabilitation des vergers (cacao, café, hévéa), et l'accompagnement technique des producteurs."
+  },
+  {
+    id: 'forestry',
+    icon: FiAperture,
+    title: 'Aménagement Forestier & Sylviculture',
+    color: 'from-blue-500 to-cyan-700',
+    description: "Compétences en aménagement durable des forêts, sylviculture, inventaires forestiers, planification d'exploitation à faible impact, et gestion des Unités Forestières d'Aménagement (UFA). Expertise en SIG, cartographie, et traçabilité des produits forestiers."
+  },
+  {
+    id: 'ecology',
+    icon: FiSun,
+    title: 'Écologie & Conservation (Faune/Aires Protégées)',
+    color: 'from-amber-500 to-orange-700',
+    description: "Expertise en écologie, conservation de la faune, gestion des aires protégées, biomonitoring (SMART, CyberTracker, camera traps), inventaires fauniques, et recherche scientifique sur la biodiversité du Bassin du Congo."
+  },
+  {
+    id: 'agroeconomy',
+    icon: FiPieChart,
+    title: 'Agro-économie & Chaînes de Valeur',
+    color: 'from-purple-500 to-indigo-700',
+    description: "Compétences en analyse des chaînes de valeur agricoles, développement de filières durables, économie rurale, finance climatique, et transformation des systèmes alimentaires. Expertise en études de marché, analyse socio-économique, et accompagnement des organisations paysannes."
+  },
+  {
+    id: 'aquaculture',
+    icon: FiDroplet,
+    title: 'Aquaculture & Zootechnie',
+    color: 'from-cyan-500 to-teal-700',
+    description: "Expertise en production piscicole, reproduction et élevage des poissons, alimentation aquacole, et gestion des exploitations aquacoles. Compétences également en production animale, transformation des produits, et entrepreneuriat agricole."
+  },
+  {
+    id: 'digital',
+    icon: FiMonitor,
+    title: 'Solutions Numériques & Transformation Digitale',
+    color: 'from-indigo-500 to-purple-700',
+    description: "Expertise en conception et développement de solutions numériques innovantes pour le secteur agricole et agro-industriel. Compétences en développement de logiciels de suivi d'activités de production, d'outils d'analyse statistique en temps réel, de plateformes d'évaluation des compétences professionnelles, et de systèmes d'information géographique (SIG) pour la gestion des ressources naturelles. Accompagnement des entreprises et organisations dans leur transformation digitale à travers des solutions sur mesure adaptées aux réalités du terrain."
+  }
+];
+
+  // Données QHSE (section unique)
+  const qhseData = {
+    title: "Conseil, accompagnement, formation, audit QHSE et certification ISO",
+    description: "Au-delà de l'expertise agronomique et forestière pure, des membres de l'association interviennent également, en collaboration avec des partenaires spécialisés en management QHSE, sur des domaines transversaux essentiels à la mise aux normes des entreprises agro-industrielles : formation des acteurs de la filière à tous les niveaux, organisation et suivi de groupements de producteurs, caractérisation socio-économique et environnementale des zones de production, conception et suivi de projets agricoles et halieutiques, promotion des bonnes pratiques agricoles, et renforcement des capacités sur l'utilisation sécurisée des produits phytosanitaires.",
+    services: [
+      "Conseil, accompagnement, formation et audit en QHSE et management des entreprises et organisations",
+      "Certification de personnes et d'entreprises sur les référentiels ISO (9001, 22000, 26000, 14001, 31000)",
+      "Audit des systèmes de management Qualité, Hygiène, Santé, Sécurité et Environnement",
+      "Réalisation d'Études d'Impact Environnementales et Sociales (EIES) selon les référentiels législatifs et normatifs (ISO 14001, 26000, EMAS)",
+      "Mise en place de systèmes HACCP et de méthodes d'hygiène pour les unités agroalimentaires",
+      "Assainissement, dératisation, désinsectisation des espaces et bâtiments d'élevage, traitement phytosanitaire",
+      "Accompagnement à la certification internationale PECB : management de la qualité, gouvernance et gestion des risques, sécurité de l'information, continuité d'activité",
+      "Promotion de l'entrepreneuriat et du marketing par la formation et le renforcement des capacités"
+    ]
+  };
+
   const partners = [
     { 
       name: 'AFRICANUT FISH MARKET', 
@@ -240,7 +309,7 @@ const About = () => {
     address: 'Yaoundé, Cameroun'
   };
 
-  const socialLinks = [
+    const socialLinks = [
     { 
       icon: FiFacebook, 
       url: 'https://www.facebook.com/share/1BDMdB7s4y/', 
@@ -249,13 +318,13 @@ const About = () => {
     },
     { 
       icon: FaLinkedin, 
-      url: 'https://linkedin.com/company/aifasa17', 
+      url: 'https://www.linkedin.com/company/association-des-ing%C3%A9nieurs-agronomes-et-forestiers-de-la-fasa-promo-17-du-cameroun/', 
       label: 'LinkedIn',
       color: 'bg-blue-700 hover:bg-blue-800'
     },
     { 
       icon: FiYoutube, 
-      url: 'https://youtube.com/@aifasa17', 
+      url: 'https://www.youtube.com/@AIFASA17', 
       label: 'YouTube',
       color: 'bg-red-600 hover:bg-red-700'
     },
@@ -275,6 +344,16 @@ const About = () => {
   const toggleCommission = (id) => {
     setExpandedCommission(expandedCommission === id ? null : id);
   };
+
+  // Images d'illustration pour chaque domaine
+  const expertiseImages = {
+  agroforestry: 'https://images.unsplash.com/photo-1595515106969-1ce29566ff1c?auto=format&fit=crop&q=80&w=800',
+  forestry: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&q=80&w=800',
+  ecology: 'https://images.unsplash.com/photo-1504006833117-8886a355efbf?auto=format&fit=crop&q=80&w=800',
+  agroeconomy: 'https://images.unsplash.com/photo-1578574017019-6b7a0cb5f3f3?auto=format&fit=crop&q=80&w=800',
+  aquaculture: 'https://images.unsplash.com/photo-1542524602-97c41b1a9e70?auto=format&fit=crop&q=80&w=800',
+  digital: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800'
+};
 
   return (
     <div className="min-h-screen bg-gray-50 overflow-x-hidden selection:bg-green-700 selection:text-white">
@@ -317,23 +396,25 @@ const About = () => {
 
       {/* Navigation des Onglets */}
       <div className="container mx-auto max-w-6xl px-4 py-8">
-        <div className="flex flex-wrap justify-center bg-white rounded-xl shadow-md p-2 max-w-2xl mx-auto border border-gray-100">
-          {['presentation', 'bureau', 'organisation', 'partenaires', 'contact'].map((tab) => (
+        <div className="flex flex-wrap justify-center bg-white rounded-xl shadow-md p-2 max-w-3xl mx-auto border border-gray-100">
+          {['presentation', 'expertise', 'bureau', 'organisation', 'partenaires', 'contact'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all duration-300 text-sm ${
+              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg font-medium transition-all duration-300 text-xs md:text-sm ${
                 activeTab === tab
                   ? 'bg-green-700 text-white shadow-md'
                   : 'text-gray-600 hover:bg-green-50'
               }`}
             >
               {tab === 'presentation' && <FiTarget className="w-4 h-4" />}
+              {tab === 'expertise' && <FiAward className="w-4 h-4" />}
               {tab === 'bureau' && <FiUserCheck className="w-4 h-4" />}
               {tab === 'organisation' && <FiBriefcase className="w-4 h-4" />}
               {tab === 'partenaires' && <FiLink className="w-4 h-4" />}
               {tab === 'contact' && <FiMail className="w-4 h-4" />}
               {tab === 'presentation' ? 'Présentation' : 
+               tab === 'expertise' ? 'Expertises' : 
                tab === 'bureau' ? 'Bureau' : 
                tab === 'organisation' ? 'Gouvernance' : 
                tab === 'partenaires' ? 'Partenaires' : 'Contact'}
@@ -366,7 +447,7 @@ const About = () => {
                 </p>
               </div>
 
-              {/* ====== FEUILLE DE ROUTE STRATÉGIQUE (AJOUT) ====== */}
+              {/* Feuille de Route Stratégique */}
               <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-2 bg-emerald-100 rounded-lg">
@@ -418,7 +499,7 @@ const About = () => {
                 </div>
               </div>
 
-              {/* ====== HISTORIQUE CORRIGÉ ====== */}
+              {/* Historique */}
               <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
                 <h2 className="text-2xl font-bold text-green-900 mb-8 flex items-center gap-2">
                   <FiCalendar className="text-green-700" /> Notre Trajectoire
@@ -440,6 +521,123 @@ const About = () => {
                       </div>
                     </motion.div>
                   ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ====== TAB EXPERTISE ====== */}
+          {activeTab === 'expertise' && (
+            <motion.div
+              key="expertise"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-8"
+            >
+              {/* En-tête des expertises */}
+              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-3 bg-green-100 rounded-xl">
+                    <FiAward className="w-8 h-8 text-green-700" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-green-900">Nos Domaines d'Expertise</h2>
+                    <p className="text-gray-500 text-sm">Un vivier de compétences pluridisciplinaires au service du développement durable</p>
+                  </div>
+                </div>
+                <p className="text-gray-600 leading-relaxed">
+                  L'AIFASA 17 regroupe des ingénieurs agronomes et forestiers aux profils variés et complémentaires. 
+                  Notre association couvre un large spectre d'expertises, allant des productions végétales à la gouvernance environnementale, 
+                  en passant par l'aquaculture et le conseil QHSE. Découvrez ci-dessous nos domaines de compétence clés.
+                </p>
+              </div>
+
+              {/* Cartes des domaines d'expertise avec illustration et description */}
+              <div className="grid md:grid-cols-2 gap-8">
+                {expertiseDomains.map((domain) => (
+                  <motion.div
+                    key={domain.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4 }}
+                    className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+                  >
+                    {/* Illustration */}
+                    <div className="relative h-48 overflow-hidden">
+                      <img 
+                        src={expertiseImages[domain.id]} 
+                        alt={domain.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                      <div className={`absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-r ${domain.color} opacity-90`}>
+                        <div className="flex items-center gap-2 text-white">
+                          <domain.icon className="w-5 h-5" />
+                          <span className="font-bold text-sm">{domain.title}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Description uniquement */}
+                    <div className="p-5">
+                      <p className="text-sm text-gray-600 leading-relaxed">{domain.description}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Section QHSE - UNIQUE */}
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                <div className="relative h-56 overflow-hidden">
+                  <img 
+                    src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=1200" 
+                    alt="QHSE - Conseil et certification ISO"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-red-900/80 via-red-800/40 to-transparent"></div>
+                  <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-r from-red-600 to-rose-700 opacity-95">
+                    <div className="flex items-center gap-3 text-white">
+                      <FiCheckCircle className="w-6 h-6" />
+                      <h3 className="text-xl font-bold">Conseil, accompagnement, formation, audit QHSE et certification ISO</h3>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6 space-y-6">
+                  <p className="text-gray-600 text-sm leading-relaxed">{qhseData.description}</p>
+
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    {qhseData.services.map((service, idx) => (
+                      <div key={idx} className="flex items-start gap-2.5 bg-gray-50 p-3 rounded-lg border border-gray-100 hover:bg-red-50 hover:border-red-200 transition-all duration-200">
+                        <FiCheckCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                        <span className="text-xs text-gray-700 leading-relaxed">{service}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Call to action */}
+              <div className="bg-gradient-to-br from-green-900 to-emerald-950 rounded-2xl p-8 text-center text-white shadow-xl max-w-3xl mx-auto border border-green-800/20">
+                <h3 className="text-xl md:text-2xl font-bold">Vous avez un projet ?</h3>
+                <p className="text-green-100/80 text-sm mt-2 max-w-xl mx-auto">
+                  Faites appel à l'expertise de nos ingénieurs pour vos projets de développement agricole, forestier ou environnemental.
+                </p>
+                <div className="mt-5 flex flex-wrap justify-center gap-3">
+                  <button className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold text-sm px-5 py-2.5 rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5">
+                    Consulter le Hub d'expertise
+                    <FiArrowRight className="w-4 h-4" />
+                  </button>
+                  <a 
+                    href="mailto:association.fasa17@gmail.com"
+                    className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold text-sm px-5 py-2.5 rounded-lg border border-white/20 transition-all"
+                  >
+                    <FiMail className="w-4 h-4" />
+                    Nous contacter
+                  </a>
                 </div>
               </div>
             </motion.div>
@@ -490,7 +688,7 @@ const About = () => {
             </motion.div>
           )}
 
-          {/* ====== TAB ORGANISATION (INCHANGÉ) ====== */}
+          {/* ====== TAB ORGANISATION ====== */}
           {activeTab === 'organisation' && (
             <motion.div
               key="organisation"
@@ -623,7 +821,7 @@ const About = () => {
             </motion.div>
           )}
 
-          {/* ====== TAB PARTENAIRES (INCHANGÉ) ====== */}
+          {/* ====== TAB PARTENAIRES ====== */}
           {activeTab === 'partenaires' && (
             <motion.div
               key="partenaires"
@@ -690,7 +888,7 @@ const About = () => {
             </motion.div>
           )}
 
-          {/* ====== TAB CONTACT (INCHANGÉ) ====== */}
+          {/* ====== TAB CONTACT ====== */}
           {activeTab === 'contact' && (
             <motion.div
               key="contact"
