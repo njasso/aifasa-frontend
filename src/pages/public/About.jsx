@@ -26,7 +26,10 @@ import {
   FiLink,
   FiFacebook,
   FiYoutube,
-  FiExternalLink
+  FiExternalLink,
+  FiEye,
+  FiActivity,
+  FiGrid
 } from 'react-icons/fi';
 import { FaLinkedin } from 'react-icons/fa';
 
@@ -39,9 +42,48 @@ const About = () => {
   // Statistiques clés
   const stats = [
     { icon: FiUsers, value: '35+', label: 'Membres actifs' },
-    { icon: FiBriefcase, value: '15+', label: 'Projets réalisés' },
-    { icon: FiAward, value: '3+', label: 'Partenariats' },
-    { icon: FiCalendar, value: '7 ans', label: "D'existence" },
+    { icon: FiActivity, value: '3', label: 'Projets AGR lancés' },
+    { icon: FiGrid, value: '5', label: 'Axes Stratégiques' },
+    { icon: FiCalendar, value: '5 ans', label: "D'existence légale" },
+  ];
+
+  // Les 5 Axes Stratégiques (AG Juin 2026)
+  const strategicAxes = [
+    { 
+      id: 1, 
+      icon: FiEye,
+      title: "Visibilité & Insertion Professionnelle", 
+      desc: "Promouvoir le profil de chaque ingénieur, faciliter l'accès aux opportunités de carrière et renforcer la présence institutionnelle de l'association.",
+      color: 'border-l-blue-500'
+    },
+    { 
+      id: 2, 
+      icon: FiHeart,
+      title: "Solidarité & Cohésion Sociale", 
+      desc: "Dynamiser le Fonds Social, structurer l'entraide mutuelle active lors des événements de vie et renforcer les liens fraternels entre membres.",
+      color: 'border-l-red-500'
+    },
+    { 
+      id: 3, 
+      icon: FiTrendingUp,
+      title: "Autonomie Financière & AGR", 
+      desc: "Investir collectivement dans des projets agro-pastoraux porteurs (pisciculture, aviculture, foncier) pour garantir l'indépendance économique.",
+      color: 'border-l-emerald-500'
+    },
+    { 
+      id: 4, 
+      icon: FiShield,
+      title: "Gouvernance & Structuration Juridique", 
+      desc: "Garantir un suivi-évaluation transparent, maintenir une conformité juridique stricte et professionnaliser la gestion administrative.",
+      color: 'border-l-purple-500'
+    },
+    { 
+      id: 5, 
+      icon: FiMonitor,
+      title: "Transition Numérique & Hub d'Expertise", 
+      desc: "Concevoir les plateformes digitales, déployer le Hub d'expertise pour valoriser nos compétences et interconnecter les membres.",
+      color: 'border-l-amber-500'
+    },
   ];
 
   // Membres du Bureau Exécutif avec photos
@@ -83,12 +125,13 @@ const About = () => {
     },
   ];
 
+  // Historique corrigé avec dates officielles
   const historyEvents = [
-    { year: '2019', event: 'Création de l\'association AIFASA 17' },
-    { year: '2020', event: 'Première Assemblée Générale constitutive' },
-    { year: '2021', event: 'Lancement des premiers projets collectifs' },
-    { year: '2023', event: 'Renforcement des partenariats institutionnels' },
-    { year: '2025', event: 'Évolution et renouvellement des instances dirigeantes' },
+    { year: '2019', event: 'Émergence de l\'initiative et rassemblement fondateur de la 17ème promotion FASA.' },
+    { year: '2021', event: 'Reconnaissance officielle par l\'État du Cameroun (Récépissé N°00000142/RDA/J06/SAAJP du 15 Mars 2021).' },
+    { year: '2023', event: 'Lancement des premiers projets collectifs.' },
+    { year: '2025', event: 'Lancement de la phase de maturation des Activités Génératrices de Revenus (AGR).' },
+    { year: '2026', event: 'Programme stratégique de modernisation technologique de l\'Assocaition: Hub d\'expertise et plateforme numérique.' },
   ];
 
   const statutoryBodies = [
@@ -185,7 +228,7 @@ const About = () => {
   const galleryImages = [
     { url: 'https://images.unsplash.com/photo-1595515106969-1ce29566ff1c?auto=format&fit=crop&q=80&w=800', caption: 'Travaux de terrain en agroforesterie' },
     { url: 'https://res.cloudinary.com/djhyztec8/image/upload/v1782068840/WhatsApp_Image_2026-06-21_at_19.51.37_frfzdi.jpg', caption: 'Session de réorientation des activités' },
-    { url: 'https://res.cloudinary.com/djhyztec8/image/upload/v1782070025/IMG_1458_qhge7f.jpg', caption: 'Projets piscicoles' },
+    { url: 'https://res.cloudinary.com/djhyztec8/image/upload/v1782133228/WhatsApp_Image_2026-06-22_at_05.20.23_i6hxcj.jpg', caption: 'Supervision des campagnes agricoles' },
     { url: 'https://res.cloudinary.com/djhyztec8/image/upload/v1782067779/WhatsApp_Image_2026-06-21_at_19.40.41_je2cba.jpg', caption: 'Etude d\'impacts environnemetales route Akom 2 -Kribi' },
     { url: 'https://res.cloudinary.com/djhyztec8/image/upload/v1782071069/PXL_20250703_074528129_t1kixn.jpg', caption: 'Formation aux métiers piscicoles' },
     { url: 'https://res.cloudinary.com/djhyztec8/image/upload/v1782069784/IMG_2835_jagn6a.jpg', caption: 'Projets agricoles durables' },
@@ -323,6 +366,38 @@ const About = () => {
                 </p>
               </div>
 
+              {/* ====== FEUILLE DE ROUTE STRATÉGIQUE (AJOUT) ====== */}
+              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-emerald-100 rounded-lg">
+                    <FiStar className="w-6 h-6 text-emerald-700" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-green-900">Feuille de Route Stratégique</h3>
+                    <p className="text-sm text-gray-500">Adoptée lors de l'Assemblée Générale - Juin 2026, EBOLOWA</p>
+                  </div>
+                </div>
+                
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {strategicAxes.map((axis) => (
+                    <motion.div
+                      key={axis.id}
+                      whileHover={{ y: -3 }}
+                      className={`bg-gray-50 rounded-xl p-5 border-l-4 ${axis.color} shadow-sm hover:shadow-md transition-all duration-300 flex flex-col gap-3`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold bg-green-700 text-white px-2 py-0.5 rounded-full">
+                          Axe {axis.id}
+                        </span>
+                        <axis.icon className="w-4 h-4 text-green-700" />
+                      </div>
+                      <h4 className="font-bold text-gray-800 text-sm">{axis.title}</h4>
+                      <p className="text-gray-600 text-xs leading-relaxed">{axis.desc}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+
               {/* Galerie */}
               <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
                 <h3 className="text-2xl font-bold text-green-900 mb-6 flex items-center gap-2">
@@ -343,7 +418,7 @@ const About = () => {
                 </div>
               </div>
 
-              {/* Historique */}
+              {/* ====== HISTORIQUE CORRIGÉ ====== */}
               <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
                 <h2 className="text-2xl font-bold text-green-900 mb-8 flex items-center gap-2">
                   <FiCalendar className="text-green-700" /> Notre Trajectoire
@@ -358,7 +433,7 @@ const About = () => {
                       transition={{ delay: index * 0.1 }}
                       className="relative pl-8"
                     >
-                      <div className="absolute -left-[11px] top-1 w-5 h-5 bg-green-600 border-4 border-white rounded-full shadow-md animate-pulse"></div>
+                      <div className="absolute -left-[11px] top-1 w-5 h-5 bg-green-600 border-4 border-white rounded-full shadow-md"></div>
                       <div className="bg-gray-50 p-5 rounded-xl border border-gray-100 hover:shadow-md transition-shadow">
                         <span className="inline-block px-3 py-1 bg-green-100 text-green-800 font-bold text-xs rounded-full mb-2">{event.year}</span>
                         <p className="text-gray-700 font-medium">{event.event}</p>
@@ -415,7 +490,7 @@ const About = () => {
             </motion.div>
           )}
 
-          {/* ====== TAB ORGANISATION ====== */}
+          {/* ====== TAB ORGANISATION (INCHANGÉ) ====== */}
           {activeTab === 'organisation' && (
             <motion.div
               key="organisation"
@@ -548,7 +623,7 @@ const About = () => {
             </motion.div>
           )}
 
-          {/* ====== TAB PARTENAIRES ====== */}
+          {/* ====== TAB PARTENAIRES (INCHANGÉ) ====== */}
           {activeTab === 'partenaires' && (
             <motion.div
               key="partenaires"
@@ -575,7 +650,6 @@ const About = () => {
                       whileHover={{ y: -5, scale: 1.02 }}
                       className="bg-gray-50 rounded-xl p-6 border border-gray-100 text-center hover:shadow-lg transition-all duration-300 hover:bg-white group cursor-pointer flex flex-col items-center justify-center"
                     >
-                      {/* Logo du partenaire */}
                       <div className="w-24 h-24 flex items-center justify-center mb-4 p-3 bg-white rounded-xl shadow-sm group-hover:shadow-md transition-shadow duration-300">
                         <img 
                           src={partner.logo} 
@@ -587,16 +661,10 @@ const About = () => {
                           }}
                         />
                       </div>
-                      
-                      {/* Nom du partenaire */}
                       <p className="font-semibold text-gray-800 group-hover:text-green-700 transition-colors duration-300">
                         {partner.name}
                       </p>
-                      
-                      {/* Secteur d'activité */}
                       <p className="text-xs text-gray-500 mt-1">{partner.sector}</p>
-                      
-                      {/* Lien externe */}
                       <div className="mt-3 flex items-center gap-1 text-xs text-green-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <FiExternalLink className="w-3 h-3" />
                         <span>Visiter le site</span>
@@ -605,11 +673,8 @@ const About = () => {
                   ))}
                 </div>
 
-                {/* Message pour devenir partenaire */}
                 <div className="mt-10 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100 text-center">
-                  <h3 className="text-lg font-bold text-green-900 mb-2">
-                    Devenir Partenaire
-                  </h3>
+                  <h3 className="text-lg font-bold text-green-900 mb-2">Devenir Partenaire</h3>
                   <p className="text-sm text-gray-600 mb-4">
                     Vous souhaitez collaborer avec l'AIFASA 17 ? Contactez-nous pour explorer les possibilités de partenariat.
                   </p>
@@ -625,7 +690,7 @@ const About = () => {
             </motion.div>
           )}
 
-          {/* ====== TAB CONTACT ====== */}
+          {/* ====== TAB CONTACT (INCHANGÉ) ====== */}
           {activeTab === 'contact' && (
             <motion.div
               key="contact"
@@ -669,7 +734,6 @@ const About = () => {
                   </div>
                 </div>
 
-                {/* Réseaux sociaux */}
                 <div className="mt-6">
                   <h4 className="text-center font-semibold text-gray-700 mb-4">Suivez-nous sur les réseaux</h4>
                   <div className="flex justify-center gap-4">

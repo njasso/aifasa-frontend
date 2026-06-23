@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { login } from '../../services/api';
 import { motion } from 'framer-motion';
-import { FiMail, FiLock, FiLogIn, FiAlertTriangle, FiInfo } from 'react-icons/fi';
+import { FiMail, FiLock, FiLogIn, FiAlertTriangle, FiInfo, FiEye, FiEyeOff } from 'react-icons/fi'; // ← AJOUTÉ FiEye, FiEyeOff
 
 const Login = () => {
   const { login: setAuth } = useAuth();
@@ -16,6 +16,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // ← AJOUTÉ
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -121,15 +122,28 @@ const Login = () => {
               </div>
               <input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"} // ← MODIFIÉ
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-emerald-800 focus:border-emerald-800 shadow-2xs outline-hidden transition-all"
+                className="w-full pl-9 pr-10 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-emerald-800 focus:border-emerald-800 shadow-2xs outline-hidden transition-all"
                 required
                 minLength="6"
                 disabled={isLoading}
               />
+              {/* ← BOUTON ŒIL AJOUTÉ */}
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  <FiEyeOff className="w-4 h-4" />
+                ) : (
+                  <FiEye className="w-4 h-4" />
+                )}
+              </button>
             </div>
           </div>
 

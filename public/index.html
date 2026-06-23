@@ -3,18 +3,83 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Plateforme de Gestion - Association des Ingénieurs</title>
+  <title>AIFASA 17 - Plateforme de Gestion</title>
   
-  <!-- Favicon Standard (.ico) pour les anciens navigateurs -->
+  <!-- ========== FAVICONS (Optimisés pour éviter les crashs) ========== -->
+  
+  <!-- Favicon Standard (.ico) -->
   <link rel="icon" href="%PUBLIC_URL%/favicon.ico" type="image/x-icon">
   <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico" type="image/x-icon">
   
-  <!-- Favicon Moderne (.png) haute définition -->
-  <link rel="icon" href="%PUBLIC_URL%/images/logo.png" type="image/png" sizes="32x32">
-  <link rel="apple-touch-icon" href="%PUBLIC_URL%/images/logo.png">
+  <!-- Favicon PNG (Recommandé pour les navigateurs modernes) -->
+  <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/images/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="%PUBLIC_URL%/images/favicon-96x96.png">
+  
+  <!-- Apple Touch Icon (iOS) -->
+  <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/images/apple-touch-icon.png">
+  
+  <!-- Android/Chrome -->
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json">
+  <meta name="theme-color" content="#064e3b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+  <!-- ========== SÉCURITÉ ========== -->
+  
+  <!-- Content Security Policy -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' 'unsafe-eval';
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    img-src 'self' data: https: blob: https://res.cloudinary.com;
+    connect-src 'self' https://aifasa-backend.onrender.com https://*.onrender.com;
+    media-src 'self';
+    object-src 'none';
+    frame-src 'none';
+  ">
+  
+  <!-- Anti-clickjacking -->
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  
+  <!-- XSS Protection -->
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+  
+  <!-- MIME Type sniffing -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  
+  <!-- Referrer Policy -->
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  
+  <!-- Permissions Policy -->
+  <meta http-equiv="Permissions-Policy" content="
+    camera=(),
+    microphone=(),
+    geolocation=(),
+    payment=()
+  ">
+  
+  <!-- ========== SEO ========== -->
+  <meta name="description" content="AIFASA 17 - Plateforme de gestion de l'Association des Ingénieurs Agronomes et Forestiers de la 17ème promotion de la FASA">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="AIFASA 17">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="AIFASA 17 - Plateforme de Gestion">
+  <meta property="og:description" content="Association des Ingénieurs Agronomes et Forestiers de la 17ème promotion de la FASA">
+  <meta property="og:image" content="%PUBLIC_URL%/images/logo.png">
+  <meta property="og:url" content="https://aifasa17.cm">
+  <meta property="og:type" content="website">
+  
 </head>
 <body class="bg-gray-50 antialiased">
-  <noscript>Vous devez activer JavaScript pour exécuter cette application.</noscript>
+  <noscript>
+    <div style="text-align:center; padding:20px; font-family:Arial;">
+      <h1>JavaScript requis</h1>
+      <p>Vous devez activer JavaScript pour accéder à la plateforme AIFASA 17.</p>
+    </div>
+  </noscript>
   <div id="root"></div>
 </body>
 </html>

@@ -24,7 +24,9 @@ import {
   FiSave,
   FiX,
   FiCheckCircle,
-  FiAlertTriangle
+  FiAlertTriangle,
+  FiEye,      // ← AJOUTÉ
+  FiEyeOff    // ← AJOUTÉ
 } from 'react-icons/fi';
 
 const AdminUsers = () => {
@@ -39,6 +41,7 @@ const AdminUsers = () => {
     role: 'member'
   });
   const [message, setMessage] = useState({ text: '', type: '' });
+  const [showPassword, setShowPassword] = useState(false); // ← AJOUTÉ
 
   useEffect(() => {
     fetchUsers();
@@ -74,12 +77,14 @@ const AdminUsers = () => {
     }
     setIsModalOpen(true);
     setMessage({ text: '', type: '' });
+    setShowPassword(false); // ← Réinitialiser
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingUser(null);
     setFormData({ email: '', password: '', role: 'member' });
+    setShowPassword(false); // ← Réinitialiser
   };
 
   const handleSubmit = async (e) => {
@@ -342,14 +347,27 @@ const AdminUsers = () => {
                   <div className="relative">
                     <FiLock className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"} // ← MODIFIÉ
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-emerald-800 focus:border-emerald-800 shadow-2xs outline-hidden"
+                      className="w-full pl-9 pr-10 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-emerald-800 focus:border-emerald-800 shadow-2xs outline-hidden"
                       minLength={editingUser ? 0 : 6}
                       placeholder="••••••••"
                       required={!editingUser}
                     />
+                    {/* ← BOUTON ŒIL AJOUTÉ */}
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        <FiEyeOff className="w-4 h-4" />
+                      ) : (
+                        <FiEye className="w-4 h-4" />
+                      )}
+                    </button>
                   </div>
                   {editingUser && (
                     <p className="text-[10px] font-medium text-gray-400 mt-1">L'ancien mot de passe reste valide si ce champ reste vide.</p>
