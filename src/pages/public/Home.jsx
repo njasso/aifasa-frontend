@@ -1,6 +1,8 @@
 // src/pages/public/Home.jsx
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // ← Ajouter useNavigate
+import { useAuth } from '../../context/AuthContext'; // ← Ajouter useAuth
+import { isAuthenticated, getUserRole } from '../../services/api'; // ← Importer les fonctions
 import { motion } from 'framer-motion';
 import { 
   FiUsers, 
@@ -13,10 +15,40 @@ import {
   FiGlobe,
   FiUserPlus,
   FiLayers,
-  FiCpu
+  FiCpu,
+  FiLogIn,
+  FiUser
 } from 'react-icons/fi';
 
 const Home = () => {
+  const { user } = useAuth(); // ← Récupérer l'utilisateur connecté
+  const navigate = useNavigate(); // ← Pour la navigation
+
+  // Vérifier si l'utilisateur est connecté
+  const connected = isAuthenticated();
+  const userRole = getUserRole();
+
+  // Déterminer le lien de l'espace membre
+  const getMemberLink = () => {
+    if (connected && userRole === 'admin') return '/admin/dashboard';
+    if (connected) return '/dashboard';
+    return '/login';
+  };
+
+  // Texte du bouton
+  const getMemberButtonText = () => {
+    if (connected) return 'Mon Espace';
+    return 'Espace Membre';
+  };
+
+  // Icône du bouton
+  const getMemberIcon = () => {
+    if (connected) return FiUser;
+    return FiLogIn;
+  };
+
+  const MemberIcon = getMemberIcon();
+
   const stats = [
     { icon: FiUsers, value: '35+', label: 'Membres Actifs' },
     { icon: FiBriefcase, value: '3', label: 'Projets AGR' },
@@ -30,27 +62,25 @@ const Home = () => {
     { icon: FiGlobe, title: 'Notre Vision', description: 'Faire de l\'association un réseau professionnel de référence en agro-sylviculture au Cameroun et en Afrique.' }
   ];
 
-  // Cartes AGR avec images modifiables (Rapport AG Juin 2026)
   const agrProjects = [
     { 
       title: "Pisciculture (AfricaNut Industry)", 
       status: "En production", 
       desc: "Démarrage effectif du cycle de production halieutique visant l'optimisation de la rentabilité et la croissance de l'activité.",
-      image: "https://res.cloudinary.com/djhyztec8/image/upload/v1755354813/20221103_151238_phhvpr.jpg" // LIEN PHOTO CHANGEABLE
+      image: "https://res.cloudinary.com/djhyztec8/image/upload/v1755354813/20221103_151238_phhvpr.jpg"
     },
     { 
       title: "Projet Poulet de Chair", 
       status: "Souscriptions Imminentes", 
       desc: "Business plan en cours de finalisation. Lancement très prochain de l'appel à souscriptions auprès des membres investisseurs.",
-      image: "https://images.unsplash.com/photo-1587593810167-a84920ea0781?auto=format&fit=crop&w=600&q=80" // LIEN PHOTO CHANGEABLE
+      image: "https://images.unsplash.com/photo-1587593810167-a84920ea0781?auto=format&fit=crop&w=600&q=80"
     },
     { 
-      title: "Projet Social Foncier ", 
+      title: "Projet Social Foncier", 
       status: "Maturation avancée", 
-      desc: "Organisation d'achats groupés, négociation de services techniques liés au foncier et la facilitation d'accès à la propriété immobilière ou terrienne au bénéfice exclusif de ses membres pour le développement de leurs activités..",
-      image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=600&q=80" // LIEN PHOTO CHANGEABLE
+      desc: "Organisation d'achats groupés, négociation de services techniques liés au foncier et la facilitation d'accès à la propriété immobilière ou terrienne au bénéfice exclusif de ses membres.",
+      image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=600&q=80"
     },
-    
   ];
 
   return (
@@ -125,11 +155,11 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Section Fondations (Mission, Valeurs, Vision exacte de l'AG) */}
+      {/* Section Fondations (Mission, Valeurs, Vision) */}
       <section className="py-20 px-4 max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold text-green-900">Les Fondations de l'AIFASA 17</h2>
-          <p className="text-gray-600 mt-2">Ce qui guide notre vision commune et nos projets d’avenir.</p>
+          <p className="text-gray-600 mt-2">Ce qui guide notre vision commune et nos projets d'avenir.</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
@@ -152,7 +182,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* SECTION AGR : Nos Pôles d'Activités & Cartes de Projets avec Illustrations */}
+      {/* SECTION AGR */}
       <section className="py-16 bg-gray-100/70 border-y border-gray-200/50 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
@@ -194,7 +224,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* SECTION HUB NUMÉRIQUE : Statut "Bientôt disponible" conforme Recommandation N°07 */}
+      {/* SECTION HUB NUMÉRIQUE */}
       <section className="py-16 bg-white px-4">
         <div className="max-w-4xl mx-auto bg-gradient-to-r from-green-900 to-emerald-950 rounded-2xl p-8 md:p-10 shadow-xl text-white relative overflow-hidden">
           <div className="absolute -right-10 -bottom-10 opacity-10 text-white">
@@ -251,7 +281,7 @@ const Home = () => {
         <div className="container mx-auto max-w-4xl px-4 text-center relative z-10">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Prêt à dynamiser votre réseau ?</h2>
           <p className="text-emerald-200 mb-8 max-w-xl mx-auto font-light">
-            Rejoignez une synergie ambitieuse d'ingénieurs agronomes et forestiers. Participez à l’essor de la 17ème promotion.
+            Rejoignez une synergie ambitieuse d'ingénieurs agronomes et forestiers. Participez à l'essor de la 17ème promotion.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link
@@ -261,11 +291,19 @@ const Home = () => {
               Adhérer maintenant
               <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
             </Link>
+            
+            {/* ====== BOUTON ESPACE MEMBRE INTELLIGENT ====== */}
             <Link
-              to="/login"
-              className="bg-green-800 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-green-700 transition-colors border border-green-700/60 shadow-inner"
+              to={getMemberLink()}
+              className={`px-8 py-3.5 rounded-xl font-bold transition-colors inline-flex items-center gap-2 ${
+                connected 
+                  ? 'bg-emerald-500 hover:bg-emerald-400 text-white border border-emerald-400 shadow-inner' 
+                  : 'bg-green-800 hover:bg-green-700 text-white border border-green-700/60 shadow-inner'
+              }`}
             >
-              Espace Membre
+              <MemberIcon className="w-4 h-4" />
+              {getMemberButtonText()}
+              {connected && <span className="w-2 h-2 bg-green-300 rounded-full animate-pulse ml-1"></span>}
             </Link>
           </div>
         </div>
@@ -297,7 +335,9 @@ const Home = () => {
                 <li><Link to="/" className="hover:text-emerald-400 transition-colors">Accueil</Link></li>
                 <li><Link to="/about" className="hover:text-emerald-400 transition-colors">À Propos</Link></li>
                 <li><Link to="/why-join" className="hover:text-emerald-400 transition-colors">Adhérer</Link></li>
-                <li><Link to="/login" className="hover:text-emerald-400 transition-colors">Espace Privé</Link></li>
+                <li><Link to={getMemberLink()} className="hover:text-emerald-400 transition-colors">
+                  {connected ? 'Mon Espace' : 'Espace Privé'}
+                </Link></li>
               </ul>
             </div>
 
@@ -305,7 +345,6 @@ const Home = () => {
               <h4 className="text-sm font-bold uppercase tracking-wider text-white">Contact & Secrétariat</h4>
               <ul className="space-y-2 text-xs font-light">
                 <li><a href="mailto:association.fasa17@gmail.com" className="hover:text-white transition-colors">association.fasa17@gmail.com</a></li>
-                {/* Conservation stricte du numéro 620 demandé combiné aux numéros officiels */}
                 <li><a href="tel:+237620370286" className="hover:text-white transition-colors">+237 620 370 286</a></li>
                 <li><a href="tel:+237697276402" className="hover:text-white transition-colors">+237 697 276 402</a></li>
                 <li><a href="tel:+237696322069" className="hover:text-white transition-colors">+237 696 322 069</a></li>
