@@ -1,4 +1,4 @@
-// src/App.jsx
+// src/App.jsx - COMPLET
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -10,8 +10,17 @@ import Home from './pages/public/Home';
 import About from './pages/public/About';
 import WhyJoin from './pages/public/WhyJoin';
 import Publications from './pages/public/Publications';
+import Events from './pages/public/Events';
+import AGSpace from './pages/public/AGSpace';
+import Jobs from './pages/public/Jobs';
+// ✅ Déplacées depuis pages/private : ces pages sont volontairement
+// accessibles sans connexion (lecture publique côté API), seules les
+// actions d'écriture (ajout/suppression) restent protégées côté backend.
+import Documents from './pages/public/Documents';
+import Gallery from './pages/public/Gallery';
+import Enterprises from './pages/public/Enterprises';
 
-// Pages privées
+// Pages privées (nécessitent une connexion)
 import Login from './pages/auth/Login';
 import Dashboard from './pages/private/Dashboard';
 import Profile from './pages/private/Profile';
@@ -20,9 +29,7 @@ import AdminUsers from './pages/private/AdminUsers';
 import Members from './pages/private/Members';
 import Treasury from './pages/private/Treasury';
 import Projects from './pages/private/Projects';
-import Documents from './pages/private/Documents';
-import Gallery from './pages/private/Gallery';
-import Enterprises from './pages/private/Enterprises';
+import Forum from './pages/private/Forum';
 
 // ========== FOOTER LÉGER (Pages publiques) ==========
 const PublicFooter = () => (
@@ -51,13 +58,15 @@ const PublicFooter = () => (
             <Link to="/about" className="hover:text-emerald-400 transition-colors">À Propos</Link>
             <Link to="/why-join" className="hover:text-emerald-400 transition-colors">Adhérer</Link>
             <Link to="/publications" className="hover:text-emerald-400 transition-colors">Publications</Link>
+            <Link to="/events" className="hover:text-emerald-400 transition-colors">Événements</Link>
+            <Link to="/jobs" className="hover:text-emerald-400 transition-colors">Emplois</Link>
           </div>
         </div>
 
         <div className="text-center md:text-right space-y-2">
           <h4 className="text-xs font-bold uppercase text-white">Contact</h4>
           <div className="text-xs space-y-1">
-            <a href="mailto:association.fasa17@gmail.com" className="hover:text-white transition-colors block">association.fasa17@gmail.com</a>
+            <a href="mailto:association@aifasa17.org" className="hover:text-white transition-colors block">association@aifasa17.org</a>
             <a href="tel:+237620370286" className="hover:text-white transition-colors block">+237 620 370 286</a>
             <p className="text-gray-600 mt-1">Yaoundé, Cameroun</p>
           </div>
@@ -77,7 +86,7 @@ const AppLayout = () => {
   const location = useLocation();
   
   // Pages publiques où le footer est affiché
-  const pagesAvecFooter = ['/about', '/why-join', '/publications', '/documents', '/gallery', '/enterprises'];
+  const pagesAvecFooter = ['/about', '/why-join', '/publications', '/events', '/jobs', '/gallery', '/enterprises', '/documents', '/ag'];
   const showFooter = pagesAvecFooter.includes(location.pathname);
 
   return (
@@ -90,6 +99,9 @@ const AppLayout = () => {
           <Route path="/about" element={<About />} />
           <Route path="/why-join" element={<WhyJoin />} />
           <Route path="/publications" element={<Publications />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/ag" element={<AGSpace />} />
+          <Route path="/jobs" element={<Jobs />} />
           <Route path="/documents" element={<Documents />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/enterprises" element={<Enterprises />} />
@@ -103,6 +115,7 @@ const AppLayout = () => {
           <Route path="/members" element={<ProtectedRoute><Members /></ProtectedRoute>} />
           <Route path="/treasury" element={<ProtectedRoute><Treasury /></ProtectedRoute>} />
           <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
+          <Route path="/forum" element={<ProtectedRoute><Forum /></ProtectedRoute>} />
 
           {/* 404 */}
           <Route path="*" element={<Navigate to="/" replace />} />

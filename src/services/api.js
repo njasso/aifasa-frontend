@@ -112,6 +112,12 @@ export const getCurrentUser = async () => {
   }
 };
 
+// Le membre connecté change SON propre mot de passe
+export const changePassword = async (currentPassword, newPassword) => {
+  const response = await api.post('/auth/change-password', { currentPassword, newPassword });
+  return response.data;
+};
+
 export const logout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');

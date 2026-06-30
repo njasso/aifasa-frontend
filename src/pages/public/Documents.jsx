@@ -1,3 +1,4 @@
+// src/pages/private/Documents.jsx
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getDocuments, createDocument } from '../../services/documentService';
@@ -19,6 +20,7 @@ import {
 
 const Documents = () => {
   const { user } = useAuth();
+  const isConnected = !!user;
   const isAdmin = user?.role === 'admin';
 
   const [documents, setDocuments] = useState([]);
@@ -46,6 +48,7 @@ const Documents = () => {
 
   // Chargement initial des documents
   useEffect(() => {
+    if (!isConnected) return;
     const fetchDocuments = async () => {
       setLoading(true);
       try {
@@ -59,7 +62,7 @@ const Documents = () => {
       }
     };
     fetchDocuments();
-  }, [triggerAlert]);
+  }, [isConnected, triggerAlert]);
 
   // Formattage de la taille des fichiers
   const formatBytes = (bytes, decimals = 2) => {
@@ -75,7 +78,7 @@ const Documents = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 15 * 1024 * 1024) { // Limite augmentée à 15 Mo
+      if (file.size > 15 * 1024 * 1024) {
         triggerAlert('Le fichier sélectionné dépasse la limite autorisée de 15 Mo.', 'error');
         return;
       }
@@ -159,6 +162,33 @@ const Documents = () => {
     };
   }, [documents]);
 
+  // 🔒 Redirection si non connecté
+  if (!isConnected) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          className="text-center p-8 max-w-md"
+        >
+          <div className="w-20 h-20 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-4xl">🔒</span>
+          </div>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">Espace Documentation</h2>
+          <p className="text-gray-500 text-sm mb-4">
+            Cet espace est réservé aux membres connectés de l'AIFASA 17.
+          </p>
+          <a 
+            href="/login" 
+            className="inline-flex items-center justify-center gap-2 bg-green-700 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-green-800 transition-colors"
+          >
+            Se connecter
+          </a>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 overflow-x-hidden selection:bg-emerald-700 selection:text-white">
       
@@ -216,7 +246,7 @@ const Documents = () => {
           ].map((block) => (
             <button
               key={block.id}
-              onClick={() => setFilterType(block.id === 'autres' ? 'all' : block.id)} // Exemple logique de filtre rapide
+              onClick={() => setFilterType(block.id === 'autres' ? 'all' : block.id)}
               className={`bg-white rounded-xl shadow-sm p-4 text-left border-l-4 transition-all duration-300 hover:shadow-md ${
                 filterType === block.id ? 'scale-[1.02] shadow-md ring-1 ring-black/5 font-bold' : 'opacity-90'
               }`}

@@ -1,7 +1,7 @@
 // src/pages/private/Members.jsx — v2 optimisée
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { getMembers, createMember, updateMember, deleteMember } from '../../services/memberService';
+import { getMembers, createMember, updateMember, deleteMember, getLinkedAccountEmail } from '../../services/memberService';
 import MemberCard from '../../components/MemberCard';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
@@ -75,6 +75,7 @@ const FORM_DEFAULT = {
   first_name: '', last_name: '', phone_number: '', role: 'member',
   sex: '', location: '', address: '', contact: '', profession: '',
   employment_structure: '', company_or_project: '', activities: '',
+  user_email: '',
   photoFile: null, profilePictureFileName: '', cvFile: null, cvFileName: ''
 };
 
@@ -161,7 +162,7 @@ const Members = () => {
     } finally { setIsSubmitting(false); }
   };
 
-  const handleEdit = member => {
+  const handleEdit = async member => {
     setEditingMemberId(member.id);
     setFormData({
       first_name: member.first_name || '', last_name: member.last_name || '',
@@ -170,11 +171,22 @@ const Members = () => {
       contact: member.contact || '', profession: member.profession || '',
       employment_structure: member.employment_structure || '',
       company_or_project: member.company_or_project || '', activities: member.activities || '',
+      user_email: '', // pré-rempli juste en dessous une fois récupéré
       photoFile: null, profilePictureFileName: member.photo_url ? 'Photo existante' : '',
       cvFile: null, cvFileName: member.cv_url ? 'CV existant' : ''
     });
     setFormSection(0);
     setIsFormOpen(true);
+
+    // Récupère l'email actuellement lié (silencieux si erreur, ex: droits)
+    try {
+      const linkedEmail = await getLinkedAccountEmail(member.id);
+      if (linkedEmail) {
+        setFormData(prev => ({ ...prev, user_email: linkedEmail }));
+      }
+    } catch (e) {
+      console.error('Impossible de récupérer le compte lié:', e);
+    }
   };
 
   const handleDelete = async () => {
@@ -569,6 +581,19 @@ const Members = () => {
                       <input type="text" value={formData.address}
                         onChange={e => setFormData({ ...formData, address: e.target.value })}
                         className={INPUT} />
+                    </div>
+                    <div className="pt-2 border-t border-gray-100">
+                      <label className={LABEL}>
+                        Compte de connexion lié (email) — espace "Mon Profil"
+                      </label>
+                      <input type="email" value={formData.user_email}
+                        onChange={e => setFormData({ ...formData, user_email: e.target.value })}
+                        placeholder="laisser vide pour ne pas modifier le lien existant"
+                        className={INPUT} />
+                      <p className="text-[10px] text-gray-400 mt-1">
+                        Doit correspondre à un compte déjà créé dans "Utilisateurs". Pré-rempli
+                        automatiquement si un lien existe déjà. Laisser vide = ne pas modifier le lien.
+                      </p>
                     </div>
                   </div>
                 )}

@@ -1,4 +1,4 @@
-// src/components/Navbar.jsx
+// src/components/Navbar.jsx - COMPLET NON COMPACTÉ
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -21,7 +21,13 @@ import {
   FaUserPlus,
   FaChartPie,
   FaBookOpen,
-  FaCog
+  FaCog,
+  FaCalendarAlt,
+  FaGavel,
+  FaBriefcase,
+  FaComments,
+  FaChevronDown,
+  FaBullhorn
 } from 'react-icons/fa';
 
 const Navbar = () => {
@@ -30,12 +36,17 @@ const Navbar = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [logoError, setLogoError] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
   const menuRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setIsOpen(false);
+      }
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpenDropdown(null);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -44,6 +55,7 @@ const Navbar = () => {
 
   useEffect(() => {
     setIsOpen(false);
+    setOpenDropdown(null);
   }, [location]);
 
   const handleLogout = () => {
@@ -52,23 +64,38 @@ const Navbar = () => {
     setIsOpen(false);
   };
 
-  // ============ SECTION 1: LIENS PUBLICS ============
-  const publicNavLinks = [
+  // ============ LIENS PRINCIPAUX (toujours visibles) ============
+  const mainLinks = [
     { to: "/", text: "Accueil", icon: FaHome },
     { to: "/about", text: "À Propos", icon: FaInfoCircle },
     { to: "/why-join", text: "Adhérer", icon: FaUserPlus },
-    { to: "/publications", text: "Publications", icon: FaBookOpen },
-    { to: "/documents", text: "Documents", icon: FaFileAlt },
-    { to: "/gallery", text: "Galerie", icon: FaImages },
-    { to: "/enterprises", text: "Entreprises", icon: FaBuilding },
   ];
 
-  // ============ SECTION 2: LIENS DE GESTION (Desktop) ============
+  // ============ MENU DÉROULANT : RESSOURCES (Publications + Association) ============
+  // Fusionné : un dropdown "Association" avec un seul lien public n'avait pas de sens.
+  const resourcesLinks = [
+    { to: "/publications", text: "Articles & Rapports", icon: FaBookOpen },
+    { to: "/events", text: "Événements", icon: FaCalendarAlt },
+    // ⏸️ Désactivé temporairement à la demande — décommenter pour réactiver
+    // { to: "/ag", text: "Assemblée Générale", icon: FaGavel },
+    // { to: "/jobs", text: "Bourse d'Emploi", icon: FaBriefcase },
+    { to: "/enterprises", text: "Entreprises Partenaires", icon: FaBuilding },
+    { to: "/gallery", text: "Galerie", icon: FaImages },
+  ];
+
+  // ============ LIENS COMPLÉMENTAIRES (visibles seulement si connecté) ============
+  const getAuthenticatedResourceLinks = () => {
+    if (!isAuthenticated()) return [];
+    return [{ to: "/documents", text: "Documents", icon: FaFileAlt }];
+  };
+
+  // ============ LIENS DE GESTION (source unique, utilisée par desktop ET mobile) ============
   const getManagementLinks = () => {
     const links = [
-      { to: "/members", text: "Membres", icon: FaUsers },
-      { to: "/projects", text: "Projets", icon: FaProjectDiagram },
-      { to: "/dashboard", text: "Dashboard", icon: FaChartPie },
+      { to: "/dashboard", text: "Tableau de bord", icon: FaChartPie },
+      { to: "/members", text: "Espace Membres", icon: FaUsers },
+      { to: "/projects", text: "Projets Transversaux", icon: FaProjectDiagram },
+      { to: "/forum", text: "Forum", icon: FaComments },
     ];
 
     if (user?.role === 'admin' || user?.role === 'treasurer') {
@@ -76,32 +103,11 @@ const Navbar = () => {
     }
 
     if (user?.role === 'admin') {
-      links.push({ to: "/admin/dashboard", text: "Admin", icon: FaUserShield });
-      links.push({ to: "/admin/users", text: "Utilisateurs", icon: FaCog });
+      links.push({ to: "/admin/dashboard", text: "Panel Administration", icon: FaUserShield });
+      links.push({ to: "/admin/users", text: "Contrôle Utilisateurs", icon: FaCog });
     }
 
     return links;
-  };
-
-  // ============ MENU UTILISATEUR (Mobile) ============
-  const getUserMenu = () => {
-    const menu = [
-      { to: "/dashboard", text: "Tableau de bord", icon: FaChartPie },
-      { to: "/profile", text: "Mon Profil", icon: FaUser }, // Ralloué pour accès direct mobile
-      { to: "/members", text: "Espace Membres", icon: FaUsers },
-      { to: "/projects", text: "Projets Transversaux", icon: FaProjectDiagram },
-    ];
-
-    if (user?.role === 'admin' || user?.role === 'treasurer') {
-      menu.push({ to: "/treasury", text: "Gestion Trésorerie", icon: FaMoneyBillWave });
-    }
-
-    if (user?.role === 'admin') {
-      menu.push({ to: "/admin/dashboard", text: "Panel Administration", icon: FaUserShield });
-      menu.push({ to: "/admin/users", text: "Contrôle Utilisateurs", icon: FaCog });
-    }
-
-    return menu;
   };
 
   const getRoleDisplay = () => {
@@ -172,10 +178,11 @@ const Navbar = () => {
             </Link>
           </motion.div>
 
-          {/* ======== NAVIGATION DESKTOP (Ajusté à xl:flex pour éviter les chevauchements) ======== */}
-          <div className="hidden xl:flex items-center space-x-1">
-            {/* Liens Publics */}
-            {publicNavLinks.map((link) => (
+          {/* ======== NAVIGATION DESKTOP ======== */}
+          <div className="hidden xl:flex items-center space-x-1" ref={dropdownRef}>
+            
+            {/* Liens Principaux */}
+            {mainLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
@@ -187,6 +194,42 @@ const Navbar = () => {
                 <span>{link.text}</span>
               </Link>
             ))}
+
+            {/* Dropdown Ressources (Publications + Association, fusionnés) */}
+            <div className="relative">
+              <button 
+                onClick={() => setOpenDropdown(openDropdown === 'resources' ? null : 'resources')}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-medium hover:bg-green-600 transition-colors duration-200 flex items-center whitespace-nowrap ${
+                  openDropdown === 'resources' ? 'bg-green-900/40 text-emerald-300' : ''
+                }`}
+              >
+                <FaBullhorn className="mr-1.5 text-sm" />
+                Ressources
+                <FaChevronDown className="ml-1 text-[8px]" />
+              </button>
+              <AnimatePresence>
+                {openDropdown === 'resources' && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -5 }} 
+                    animate={{ opacity: 1, y: 0 }} 
+                    exit={{ opacity: 0, y: -5 }}
+                    className="absolute top-full left-0 mt-1 bg-green-800 rounded-xl shadow-xl border border-green-700 py-2 min-w-[220px] z-50"
+                  >
+                    {[...resourcesLinks, ...getAuthenticatedResourceLinks()].map(link => (
+                      <Link 
+                        key={link.to} 
+                        to={link.to} 
+                        onClick={() => setOpenDropdown(null)}
+                        className="block px-4 py-2 text-xs hover:bg-green-700 transition-colors duration-200 flex items-center gap-2"
+                      >
+                        <link.icon className="text-sm text-green-400" />
+                        {link.text}
+                      </Link>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Séparateur si connecté */}
             {isAuthenticated() && (
@@ -236,7 +279,7 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* ======== MOBILE / TABLET TOGGLE (Modifié de md:hidden à xl:hidden pour couvrir le vide) ======== */}
+          {/* ======== MOBILE / TABLET TOGGLE ======== */}
           <div className="flex xl:hidden items-center space-x-2">
             {isAuthenticated() && roleInfo && (
               <Link to="/profile" className={`flex items-center bg-green-900/60 px-2.5 py-1 rounded-full border border-green-500/30`}>
@@ -256,7 +299,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* ======== MENU MOBILE DROPDOWN (xl:hidden) ======== */}
+      {/* ======== MENU MOBILE DROPDOWN ======== */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -272,7 +315,8 @@ const Navbar = () => {
               <div className="text-[10px] text-green-400 uppercase tracking-widest px-3 py-1.5 font-bold">
                 Navigation Publique
               </div>
-              {publicNavLinks.map((link) => (
+              
+              {[...mainLinks, ...resourcesLinks, ...getAuthenticatedResourceLinks()].map((link) => (
                 <motion.div key={link.to} variants={itemVariants}>
                   <Link
                     to={link.to}
@@ -293,7 +337,7 @@ const Navbar = () => {
                   <div className="text-[10px] text-green-400 uppercase tracking-widest px-3 py-1.5 font-bold">
                     Espace Privé & Gestion
                   </div>
-                  {getUserMenu().map((link) => (
+                  {[{ to: "/profile", text: "Mon Profil", icon: FaUser }, ...getManagementLinks()].map((link) => (
                     <motion.div key={link.to} variants={itemVariants}>
                       <Link
                         to={link.to}

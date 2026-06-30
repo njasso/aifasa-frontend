@@ -18,7 +18,8 @@ export const createMember = async (data) => {
     // Ajouter tous les champs texte
     const fields = ['first_name', 'last_name', 'phone_number', 'role', 'sex', 
                     'location', 'address', 'contact', 'profession', 
-                    'employment_structure', 'company_or_project', 'activities'];
+                    'employment_structure', 'company_or_project', 'activities',
+                    'user_email'];
     
     fields.forEach(key => {
       if (data[key] !== undefined && data[key] !== null) {
@@ -61,7 +62,8 @@ export const updateMember = async (id, data) => {
     // Ajouter tous les champs texte
     const fields = ['first_name', 'last_name', 'phone_number', 'role', 'sex', 
                     'location', 'address', 'contact', 'profession', 
-                    'employment_structure', 'company_or_project', 'activities'];
+                    'employment_structure', 'company_or_project', 'activities',
+                    'user_email'];
     
     fields.forEach(key => {
       if (data[key] !== undefined && data[key] !== null) {
@@ -105,4 +107,44 @@ export const deleteMember = async (id) => {
     console.error('Failed to delete member:', error);
     throw error;
   }
+};
+
+// Récupère l'email du compte de connexion lié à un membre (admin uniquement)
+export const getLinkedAccountEmail = async (memberId) => {
+  const response = await api.get(`/members/${memberId}/linked-account`);
+  return response.data.email; // null si aucun compte lié
+};
+
+// ============ ESPACE MEMBRE - LIBRE-SERVICE ============
+
+// Récupère la fiche annuaire du membre actuellement connecté
+export const getMyProfile = async () => {
+  const response = await api.get('/members/me');
+  return response.data;
+};
+
+// Met à jour la fiche annuaire du membre actuellement connecté
+// (champs personnels uniquement : rôle et données de gouvernance non inclus)
+export const updateMyProfile = async (data) => {
+  const formData = new FormData();
+
+  const fields = ['first_name', 'last_name', 'phone_number', 'sex',
+                  'location', 'address', 'contact', 'profession',
+                  'employment_structure', 'company_or_project', 'activities'];
+
+  fields.forEach(key => {
+    if (data[key] !== undefined && data[key] !== null) {
+      formData.append(key, data[key]);
+    }
+  });
+
+  if (data.photoFile && data.photoFile instanceof File) {
+    formData.append('profilePicture', data.photoFile);
+  }
+  if (data.cvFile && data.cvFile instanceof File) {
+    formData.append('cvFile', data.cvFile);
+  }
+
+  const response = await api.put('/members/me', formData);
+  return response.data;
 };

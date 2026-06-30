@@ -1,7 +1,12 @@
 // src/pages/private/Profile.jsx
+// Réécrit : la page appelait auparavant des fonctions commentées et
+// affichait un faux message de succès sans rien sauvegarder. Elle est
+// maintenant branchée sur les vraies routes self-service du backend
+// (GET/PUT /api/members/me et POST /api/auth/change-password).
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { getCurrentUser } from '../../services/api';
+import { getCurrentUser, changePassword } from '../../services/api';
+import { getMyProfile, updateMyProfile } from '../../services/memberService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FiUser, 
@@ -10,6 +15,7 @@ import {
   FiCalendar,
   FiPhone,
   FiMapPin,
+  FiBriefcase,
   FiEdit3,
   FiSave,
   FiX,
@@ -23,20 +29,26 @@ import {
 } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 
+const FORM_DEFAULT = {
+  first_name: '',
+  last_name: '',
+  phone_number: '',
+  location: '',
+  address: '',
+  profession: '',
+  company_or_project: '',
+};
+
 const Profile = () => {
   const { user, logout } = useAuth();
-  const [userData, setUserData] = useState(null);
+  const [accountData, setAccountData] = useState(null); // email / role / created_at (table users)
+  const [memberData, setMemberData] = useState(null);   // fiche annuaire (table members)
+  const [notLinked, setNotLinked] = useState(false);     // compte non relié à une fiche membre
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    bio: ''
-  });
+  const [formData, setFormData] = useState(FORM_DEFAULT);
   
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -45,36 +57,51 @@ const Profile = () => {
   });
   
   const [message, setMessage] = useState({ text: '', type: '' });
-  const [profileImage, setProfileImage] = useState(null);
+  const [photoFile, setPhotoFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Synchronisation et réinitialisation sécurisée des états du formulaire
   const resetProfileForm = (data) => {
-    if (!data) return;
+    if (!data) {
+      setFormData(FORM_DEFAULT);
+      setImagePreview(null);
+      return;
+    }
     setFormData({
-      name: data.name || '',
-      email: data.email || '',
-      phone: data.phone || '',
+      first_name: data.first_name || '',
+      last_name: data.last_name || '',
+      phone_number: data.phone_number || '',
+      location: data.location || '',
       address: data.address || '',
-      bio: data.bio || ''
+      profession: data.profession || '',
+      company_or_project: data.company_or_project || '',
     });
-    setImagePreview(data.profile_image || null);
-    setProfileImage(null);
+    setImagePreview(data.photo_url || null);
+    setPhotoFile(null);
   };
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getCurrentUser();
-        setUserData(data);
-        resetProfileForm(data);
+        const account = await getCurrentUser();
+        setAccountData(account);
+
+        try {
+          const member = await getMyProfile();
+          setMemberData(member);
+          resetProfileForm(member);
+          setNotLinked(false);
+        } catch (memberError) {
+          // 404 = aucune fiche annuaire reliée à ce compte pour l'instant
+          setNotLinked(true);
+        }
       } catch (error) {
         console.error('Erreur lors du chargement du profil:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchUserData();
+    fetchData();
   }, []);
 
   const handleImageChange = (e) => {
@@ -84,32 +111,32 @@ const Profile = () => {
         setMessage({ text: "L'image dépasse la limite maximale autorisée de 2 Mo", type: 'error' });
         return;
       }
-      setProfileImage(file);
+      setPhotoFile(file);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
+      reader.onloadend = () => setImagePreview(reader.result);
       reader.readAsDataURL(file);
     }
   };
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setIsSubmitting(true);
     setMessage({ text: '', type: '' });
 
     try {
-      // Intégration de l'appel API réel ou simulation
-      // await updateUserProfile(formData);
-      
-      const updatedData = { ...userData, ...formData, profile_image: imagePreview };
-      setUserData(updatedData);
+      const updated = await updateMyProfile({ ...formData, photoFile });
+      setMemberData(updated);
+      resetProfileForm(updated);
       setMessage({ text: 'Votre profil a été mis à jour avec succès.', type: 'success' });
       setIsEditing(false);
     } catch (error) {
-      setMessage({ text: 'Une erreur est survenue lors de la mise à jour.', type: 'error' });
+      console.error(error);
+      setMessage({
+        text: error.response?.data?.error || 'Une erreur est survenue lors de la mise à jour.',
+        type: 'error'
+      });
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -127,20 +154,26 @@ const Profile = () => {
       return;
     }
 
-    setLoading(true);
+    setIsSubmitting(true);
     try {
-      // Intégration de l'appel API réel ou simulation
-      // await changeUserPassword(passwordData);
-      
+      await changePassword(passwordData.currentPassword, passwordData.newPassword);
       setMessage({ text: 'Votre mot de passe a été modifié avec succès.', type: 'success' });
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setIsChangingPassword(false);
     } catch (error) {
-      setMessage({ text: 'Erreur lors de la modification du mot de passe.', type: 'error' });
+      console.error(error);
+      setMessage({
+        text: error.response?.data?.error || 'Erreur lors de la modification du mot de passe.',
+        type: 'error'
+      });
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
+
+  const fullName = memberData
+    ? `${memberData.first_name || ''} ${memberData.last_name || ''}`.trim()
+    : '';
 
   if (loading) {
     return (
@@ -170,7 +203,7 @@ const Profile = () => {
             </div>
           </div>
           
-          {!isEditing && !isChangingPassword && (
+          {!isEditing && !isChangingPassword && !notLinked && (
             <button
               onClick={() => setIsEditing(true)}
               className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-950 to-emerald-900 hover:from-emerald-900 hover:to-emerald-800 text-white text-xs font-bold px-4 py-2.5 rounded-lg border border-emerald-800/50 shadow-xs transition-all"
@@ -207,6 +240,19 @@ const Profile = () => {
           )}
         </AnimatePresence>
 
+        {/* ======== COMPTE NON RELIÉ À UNE FICHE MEMBRE ======== */}
+        {notLinked && (
+          <div className="mb-6 p-4 rounded-xl flex items-start gap-3 text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-100">
+            <FiInfo className="w-4 h-4 text-amber-700 mt-0.5 flex-shrink-0" />
+            <p>
+              Votre compte de connexion n'est pas encore relié à une fiche de l'annuaire des membres.
+              Vous pouvez changer votre mot de passe ci-dessous, mais pour modifier vos informations
+              personnelles (téléphone, profession, photo...), contactez un administrateur afin qu'il
+              relie votre compte à votre fiche.
+            </p>
+          </div>
+        )}
+
         {/* ======== CONTEXTE DE LA CARTE DE PROFIL ======== */}
         <div className="bg-white rounded-xl shadow-xs overflow-hidden border border-gray-100">
           
@@ -228,12 +274,12 @@ const Profile = () => {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-emerald-50 text-emerald-800 text-3xl font-black">
-                      {userData?.name ? userData.name.charAt(0).toUpperCase() : <FiUser />}
+                      {fullName ? fullName.charAt(0).toUpperCase() : <FiUser />}
                     </div>
                   )}
                 </div>
                 
-                {isEditing && (
+                {isEditing && !notLinked && (
                   <label className="absolute -bottom-1 -right-1 bg-gradient-to-r from-emerald-950 to-emerald-900 hover:from-emerald-900 hover:to-emerald-800 text-amber-400 p-2 rounded-xl cursor-pointer shadow-md transition-all border border-emerald-800/60">
                     <FiCamera className="w-4 h-4" />
                     <input
@@ -248,12 +294,12 @@ const Profile = () => {
               
               <div className="sm:pb-2">
                 <h2 className="text-xl font-black text-slate-900 tracking-tight">
-                  {userData?.name || 'Compte Membre'}
+                  {fullName || 'Compte Membre'}
                 </h2>
                 <div className="flex items-center gap-2 mt-1.5">
                   <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-100 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide">
                     <FiTag className="w-3 h-3" />
-                    {userData?.role || 'Membre'}
+                    {accountData?.role || 'Membre'}
                   </span>
                 </div>
               </div>
@@ -269,52 +315,47 @@ const Profile = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div className="bg-gray-50/50 p-3.5 border border-gray-100/70 rounded-lg">
                     <label className="text-[10px] uppercase font-bold text-gray-400 tracking-wider flex items-center gap-1.5"><FiUser className="w-3 h-3" /> Nom complet</label>
-                    <p className="text-xs text-slate-900 font-bold mt-1">{userData?.name || 'Non renseigné'}</p>
+                    <p className="text-xs text-slate-900 font-bold mt-1">{fullName || 'Non renseigné'}</p>
                   </div>
                   <div className="bg-gray-50/50 p-3.5 border border-gray-100/70 rounded-lg">
                     <label className="text-[10px] uppercase font-bold text-gray-400 tracking-wider flex items-center gap-1.5"><FiMail className="w-3 h-3" /> Adresse e-mail</label>
-                    <p className="text-xs text-slate-900 font-bold mt-1 truncate">{userData?.email}</p>
+                    <p className="text-xs text-slate-900 font-bold mt-1 truncate">{accountData?.email}</p>
                   </div>
                   <div className="bg-gray-50/50 p-3.5 border border-gray-100/70 rounded-lg">
                     <label className="text-[10px] uppercase font-bold text-gray-400 tracking-wider flex items-center gap-1.5"><FiPhone className="w-3 h-3" /> Numéro de téléphone</label>
-                    <p className="text-xs text-slate-900 font-bold mt-1">{userData?.phone || 'Non configuré'}</p>
+                    <p className="text-xs text-slate-900 font-bold mt-1">{memberData?.phone_number || 'Non configuré'}</p>
                   </div>
                   <div className="bg-gray-50/50 p-3.5 border border-gray-100/70 rounded-lg">
-                    <label className="text-[10px] uppercase font-bold text-gray-400 tracking-wider flex items-center gap-1.5"><FiCalendar className="w-3 h-3" /> Enregistré le</label>
-                    <p className="text-xs text-slate-900 font-bold mt-1">
-                      {userData?.created_at 
-                        ? new Date(userData.created_at).toLocaleDateString('fr-FR', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })
-                        : 'Date indisponible'
-                      }
-                    </p>
+                    <label className="text-[10px] uppercase font-bold text-gray-400 tracking-wider flex items-center gap-1.5"><FiBriefcase className="w-3 h-3" /> Profession</label>
+                    <p className="text-xs text-slate-900 font-bold mt-1">{memberData?.profession || 'Non renseignée'}</p>
                   </div>
                 </div>
 
                 <div className="bg-gray-50/50 p-3.5 border border-gray-100/70 rounded-lg">
                   <label className="text-[10px] uppercase font-bold text-gray-400 tracking-wider flex items-center gap-1.5"><FiMapPin className="w-3 h-3" /> Localisation / Adresse</label>
-                  <p className="text-xs text-slate-900 font-bold mt-1">{userData?.address || 'Non spécifiée'}</p>
+                  <p className="text-xs text-slate-900 font-bold mt-1">
+                    {[memberData?.location, memberData?.address].filter(Boolean).join(' — ') || 'Non spécifiée'}
+                  </p>
                 </div>
 
                 <div className="bg-gray-50/50 p-4 border border-gray-100/70 rounded-lg">
-                  <label className="text-[10px] uppercase font-bold text-gray-400 tracking-wider flex items-center gap-1.5">Biographie / Présentation professionnelle</label>
+                  <label className="text-[10px] uppercase font-bold text-gray-400 tracking-wider flex items-center gap-1.5">Structure / Entreprise</label>
                   <p className="text-xs text-gray-600 font-medium leading-relaxed mt-2 whitespace-pre-line">
-                    {userData?.bio || "Aucune biographie rédigée pour le moment. Présentez votre parcours aux ingénieurs de la promotion."}
+                    {memberData?.company_or_project || "Aucune information renseignée pour le moment."}
                   </p>
                 </div>
 
                 {/* BARRE D'ACTIONS INFERIEURE */}
                 <div className="flex flex-wrap items-center gap-3 pt-5 border-t border-gray-100">
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-950 to-emerald-900 hover:from-emerald-900 hover:to-emerald-800 text-white text-xs font-bold px-4 py-2.5 rounded-lg border border-emerald-800/50 shadow-2xs transition-all"
-                  >
-                    <FiEdit3 className="w-3.5 h-3.5 text-amber-400" />
-                    Modifier les informations
-                  </button>
+                  {!notLinked && (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-950 to-emerald-900 hover:from-emerald-900 hover:to-emerald-800 text-white text-xs font-bold px-4 py-2.5 rounded-lg border border-emerald-800/50 shadow-2xs transition-all"
+                    >
+                      <FiEdit3 className="w-3.5 h-3.5 text-amber-400" />
+                      Modifier les informations
+                    </button>
+                  )}
                   <button
                     onClick={() => setIsChangingPassword(true)}
                     className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 border border-gray-200 text-slate-800 text-xs font-bold px-4 py-2.5 rounded-lg transition-all shadow-2xs"
@@ -338,11 +379,21 @@ const Profile = () => {
               <form onSubmit={handleSaveProfile} className="space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Nom complet</label>
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Prénom</label>
                     <input
                       type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      value={formData.first_name}
+                      onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                      className="w-full text-xs p-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-emerald-800 focus:border-emerald-800 outline-hidden font-medium text-slate-900 bg-white"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Nom</label>
+                    <input
+                      type="text"
+                      value={formData.last_name}
+                      onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                       className="w-full text-xs p-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-emerald-800 focus:border-emerald-800 outline-hidden font-medium text-slate-900 bg-white"
                       required
                     />
@@ -351,9 +402,8 @@ const Profile = () => {
                     <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Adresse email (Lecture seule)</label>
                     <input
                       type="email"
-                      value={formData.email}
+                      value={accountData?.email || ''}
                       className="w-full text-xs p-3 border border-gray-100 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed font-medium"
-                      required
                       disabled
                     />
                   </div>
@@ -361,49 +411,65 @@ const Profile = () => {
                     <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Téléphone</label>
                     <input
                       type="tel"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      value={formData.phone_number}
+                      onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
                       className="w-full text-xs p-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-emerald-800 focus:border-emerald-800 outline-hidden font-medium text-slate-900 bg-white"
                       placeholder="+237 6__ ___ ___"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Adresse géographique</label>
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Ville / Localisation</label>
+                    <input
+                      type="text"
+                      value={formData.location}
+                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                      className="w-full text-xs p-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-emerald-800 focus:border-emerald-800 outline-hidden font-medium text-slate-900 bg-white"
+                      placeholder="Ville, Pays"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Adresse</label>
                     <input
                       type="text"
                       value={formData.address}
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                       className="w-full text-xs p-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-emerald-800 focus:border-emerald-800 outline-hidden font-medium text-slate-900 bg-white"
-                      placeholder="Ville, Pays"
                     />
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Biographie / Présentation</label>
-                  <textarea
-                    value={formData.bio}
-                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                    rows={4}
-                    className="w-full text-xs p-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-emerald-800 focus:border-emerald-800 outline-hidden font-medium text-slate-900 bg-white leading-relaxed"
-                    placeholder="Partagez vos domaines d'expertise, spécialisations et projets en aquaculture ou industries animales..."
-                  />
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Profession</label>
+                    <input
+                      type="text"
+                      value={formData.profession}
+                      onChange={(e) => setFormData({ ...formData, profession: e.target.value })}
+                      className="w-full text-xs p-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-emerald-800 focus:border-emerald-800 outline-hidden font-medium text-slate-900 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Structure / Entreprise</label>
+                    <input
+                      type="text"
+                      value={formData.company_or_project}
+                      onChange={(e) => setFormData({ ...formData, company_or_project: e.target.value })}
+                      className="w-full text-xs p-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-emerald-800 focus:border-emerald-800 outline-hidden font-medium text-slate-900 bg-white"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex gap-3 pt-4 border-t border-gray-100">
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={isSubmitting}
                     className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-950 to-emerald-900 hover:from-emerald-900 hover:to-emerald-800 text-white text-xs font-bold px-5 py-2.5 rounded-lg transition-all disabled:opacity-50 shadow-2xs"
                   >
                     <FiSave className="w-3.5 h-3.5 text-amber-400" />
-                    {loading ? 'Enregistrement...' : 'Enregistrer'}
+                    {isSubmitting ? 'Enregistrement...' : 'Enregistrer'}
                   </button>
                   <button
                     type="button"
                     onClick={() => {
                       setIsEditing(false);
-                      resetProfileForm(userData);
+                      resetProfileForm(memberData);
                       setMessage({ text: '', type: '' });
                     }}
                     className="inline-flex items-center gap-2 border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold px-5 py-2.5 rounded-lg transition-all"
@@ -460,11 +526,11 @@ const Profile = () => {
                 <div className="flex gap-3 pt-4 border-t border-gray-100">
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={isSubmitting}
                     className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-950 to-emerald-900 hover:from-emerald-900 hover:to-emerald-800 text-white text-xs font-bold px-5 py-2.5 rounded-lg transition-all disabled:opacity-50 shadow-2xs"
                   >
                     <FiKey className="w-3.5 h-3.5 text-amber-400" />
-                    {loading ? 'Traitement...' : 'Mettre à jour les accès'}
+                    {isSubmitting ? 'Traitement...' : 'Mettre à jour les accès'}
                   </button>
                   <button
                     type="button"

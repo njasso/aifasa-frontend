@@ -344,7 +344,7 @@ const Home = () => {
             <div className="text-center md:text-right space-y-3">
               <h4 className="text-sm font-bold uppercase tracking-wider text-white">Contact & Secrétariat</h4>
               <ul className="space-y-2 text-xs font-light">
-                <li><a href="mailto:association.fasa17@gmail.com" className="hover:text-white transition-colors">association.fasa17@gmail.com</a></li>
+                <li><a href="mailto:association@aifasa17.org" className="hover:text-white transition-colors">association@aifasa17.org</a></li>
                 <li><a href="tel:+237620370286" className="hover:text-white transition-colors">+237 620 370 286</a></li>
                 <li><a href="tel:+237697276402" className="hover:text-white transition-colors">+237 697 276 402</a></li>
                 <li><a href="tel:+237696322069" className="hover:text-white transition-colors">+237 696 322 069</a></li>
